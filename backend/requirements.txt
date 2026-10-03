@@ -1,0 +1,7 @@
+flask==3.0.0
+flask-cors==4.0.0
+pydriller==2.5
+lizard==1.17.10
+gitpython==3.1.30
+requests==2.31.0
+python-dotenv==1.0.0
