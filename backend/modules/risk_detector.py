@@ -228,3 +228,191 @@ class RiskDetector:
             return 'Deficiente'
         else:
             return 'Crítico'
+
+    def analyze_module(
+        self,
+        file_path: str,
+        code_metrics: Dict[str, Any],
+        git_metrics: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Analiza el riesgo de un módulo combinando Git + Code metrics
+        
+        Args:
+            file_path: Ruta del archivo
+            code_metrics: Métricas de código (CC, LOC, etc.)
+            git_metrics: Métricas de Git (commits, churn, etc.)
+        
+        Returns:
+            Análisis de riesgo del módulo
+        """
+        # Extraer métricas de código
+        cc = code_metrics.get('complexity', 0)
+        loc = code_metrics.get('loc', 0)
+        functions = code_metrics.get('functions_count', 0)
+        deficiencies = code_metrics.get('deficiencies', [])
+        
+        # Extraer métricas de Git
+        commits = git_metrics.get('total_commits', 0)
+        churn = git_metrics.get('total_churn', 0)
+        bus_factor = git_metrics.get('risk_percentage', 0)
+        
+        # Calcular riesgo
+        risk_analysis = self.calculate_risk(
+            cyclomatic_complexity=cc,
+            code_churn=commits,
+            lines_of_code=loc,
+            code_duplication=0,  # Por ahora, no disponible
+            bus_factor=bus_factor
+        )
+        
+        return {
+            'file': file_path,
+            'risk_analysis': risk_analysis,
+            'code_metrics': {
+                'cyclomatic_complexity': cc,
+                'lines_of_code': loc,
+                'functions_count': functions,
+                'deficiencies': deficiencies
+            },
+            'git_metrics': {
+                'commits': commits,
+                'code_churn': churn,
+                'bus_factor_risk': bus_factor
+            }
+        }
+    
+    def analyze_repository(
+        self,
+        modules: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Analiza el riesgo de todo el repositorio
+        
+        Args:
+            modules: Lista de módulos analizados
+        
+        Returns:
+            Análisis agregado de riesgo del repositorio
+        """
+        if not modules:
+            return {
+                'error': 'No modules provided',
+                'message': 'Se requiere al menos un módulo para analizar'
+            }
+        
+        high_risk_modules = []
+        medium_risk_modules = []
+        low_risk_modules = []
+        
+        risk_scores = []
+        cc_scores = []
+        churn_scores = []
+        loc_scores = []
+        
+        # Analizar cada módulo
+        for module in modules:
+            risk_class = module.get('risk_analysis', {}).get('classification')
+            risk_score = module.get('risk_analysis', {}).get('risk_score', 0)
+            
+            risk_scores.append(risk_score)
+            
+            # Agregar scores componentes
+            components = module.get('risk_analysis', {}).get('component_scores', {})
+            cc_scores.append(components.get('cyclomatic_complexity', 0))
+            churn_scores.append(components.get('code_churn', 0))
+            loc_scores.append(components.get('lines_of_code', 0))
+            
+            # Clasificar módulos por riesgo
+            module_info = {
+                'file': module.get('file'),
+                'risk_score': risk_score,
+                'classification': risk_class,
+                'deficiencies': module.get('code_metrics', {}).get('deficiencies', [])
+            }
+            
+            if risk_class == 'HIGH':
+                high_risk_modules.append(module_info)
+            elif risk_class == 'MEDIUM':
+                medium_risk_modules.append(module_info)
+            else:
+                low_risk_modules.append(module_info)
+        
+        # Ordenar por riesgo (mayor primero)
+        high_risk_modules.sort(key=lambda x: x['risk_score'], reverse=True)
+        medium_risk_modules.sort(key=lambda x: x['risk_score'], reverse=True)
+        
+        # Calcular promedios
+        avg_risk = sum(risk_scores) / len(risk_scores) if risk_scores else 0
+        avg_cc = sum(cc_scores) / len(cc_scores) if cc_scores else 0
+        avg_churn = sum(churn_scores) / len(churn_scores) if churn_scores else 0
+        avg_loc = sum(loc_scores) / len(loc_scores) if loc_scores else 0
+        
+        # Clasificación general
+        overall_class = self._classify_risk(avg_risk)
+        
+        return {
+            'summary': {
+                'total_modules': len(modules),
+                'overall_risk_classification': overall_class,
+                'average_risk_score': round(avg_risk, 2),
+                'high_risk_count': len(high_risk_modules),
+                'medium_risk_count': len(medium_risk_modules),
+                'low_risk_count': len(low_risk_modules)
+            },
+            'average_component_scores': {
+                'cyclomatic_complexity': round(avg_cc, 2),
+                'code_churn': round(avg_churn, 2),
+                'lines_of_code': round(avg_loc, 2)
+            },
+            'high_risk_modules': high_risk_modules,
+            'medium_risk_modules': medium_risk_modules,
+            'low_risk_modules': low_risk_modules
+        }
+    
+    def generate_priority_list(
+        self,
+        repository_analysis: Dict[str, Any],
+        limit: int = 10
+    ) -> List[Dict[str, Any]]:
+        """
+        Genera lista priorizada de módulos para refactorización
+        
+        Args:
+            repository_analysis: Resultado de analyze_repository
+            limit: Máximo número de módulos a retornar
+        
+        Returns:
+            Lista priorizada de módulos de alto riesgo
+        """
+        all_modules = []
+        
+        # Combinar módulos de alto y medio riesgo
+        all_modules.extend(repository_analysis.get('high_risk_modules', []))
+        all_modules.extend(repository_analysis.get('medium_risk_modules', []))
+        
+        # Ordenar por score de riesgo (descendente)
+        all_modules.sort(key=lambda x: x['risk_score'], reverse=True)
+        
+        # Retornar los primeros `limit`
+        priority_list = []
+        for i, module in enumerate(all_modules[:limit], 1):
+            priority_list.append({
+                'priority': i,
+                'file': module['file'],
+                'risk_score': module['risk_score'],
+                'classification': module['classification'],
+                'deficiencies_count': len(module.get('deficiencies', [])),
+                'action': self._recommend_action(module['classification'])
+            })
+        
+        return priority_list
+    
+    def _recommend_action(self, classification: str) -> str:
+        """Recomienda acción según clasificación de riesgo"""
+        if classification == 'HIGH':
+            return 'Refactorización urgente - Programar inmediatamente'
+        elif classification == 'MEDIUM':
+            return 'Refactorización recomendada - Incluir en próximo sprint'
+        else:
+            return 'Monitoreo continuo - Sin acción inmediata'

@@ -2,7 +2,7 @@
 Calculador de Métricas de Código usando Lizard
 Extrae complejidad ciclomática, LOC, parámetros, etc.
 """
-from lizard import FunctionInfo, SourceFile
+import lizard
 import os
 from typing import Dict, List, Any
 
@@ -34,12 +34,12 @@ class MetricsCalculator:
         'parameters_too_many': 5
     }
     
-    def __init__(self, repo_path: str):
+    def __init__(self, repo_path: str = None):
         """
         Inicializa el calculador de métricas
         
         Args:
-            repo_path: Ruta del repositorio a analizar
+            repo_path: Ruta del repositorio a analizar (opcional)
         """
         self.repo_path = repo_path
     
@@ -57,128 +57,176 @@ class MetricsCalculator:
                     'file': file_path
                 }
             
-            # Leer archivo
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                content = f.read()
+            # Verificar que el archivo existe
+            if not os.path.exists(file_path):
+                return {
+                    'error': f'Archivo no encontrado: {file_path}',
+                    'file': file_path
+                }
             
-            # Usar Lizard para análisis
-            from lizard import analyze_file as lizard_analyze
-            result = lizard_analyze(file_path)
+            # Usar Lizard para análisis (Lizard 1.17.10)
+            try:
+                result = lizard.analyze_file(file_path)
+            except Exception as lizard_error:
+                return {
+                    'error': f'Lizard error: {str(lizard_error)}',
+                    'file': file_path,
+                    'message': f'No se pudo analizar {file_path}'
+                }
             
             functions = []
-            for func in result.functions:
+            total_complexity = 0
+            
+            # Procesar funciones (Lizard usa function_list)
+            for func in result.function_list:
+                complexity = func.cyclomatic_complexity
+                total_complexity += complexity
+                parameters_count = len(func.parameters) if hasattr(func, 'parameters') else 0
+                
                 functions.append({
                     'name': func.name,
-                    'cyclomatic_complexity': func.cyclomatic_complexity,
-                    'lines': func.lines,
-                    'parameters': len(func.parameters),
-                    'long_method': func.lines > self.THRESHOLDS['loc_long_method'],
-                    'high_complexity': func.cyclomatic_complexity > self.THRESHOLDS['cyclomatic_complexity_high'],
-                    'critical_complexity': func.cyclomatic_complexity > self.THRESHOLDS['cyclomatic_complexity_critical']
+                    'cyclomatic_complexity': complexity,
+                    'lines': func.nloc,
+                    'parameters': parameters_count
                 })
+            
+            # Calcular deficiencias
+            deficiencies = self._detect_deficiencies(result.function_list)
+            deficiency_names = [d['type'] for d in deficiencies]
             
             return {
                 'file': file_path,
                 'language': self.SUPPORTED_EXTENSIONS.get(ext, 'Unknown'),
-                'loc': result.loc,
-                'functions_count': len(result.functions),
-                'average_complexity': round(
-                    sum(f.cyclomatic_complexity for f in result.functions) / len(result.functions)
-                    if result.functions else 0, 2
-                ),
-                'total_complexity': sum(f.cyclomatic_complexity for f in result.functions),
+                'loc': result.nloc,
+                'functions_count': len(result.function_list),
+                'complexity': total_complexity,
+                'average_complexity': round(result.average_cyclomatic_complexity, 2) if result.function_list else 0,
                 'functions': functions,
-                'deficiencies': self._detect_deficiencies(result)
+                'deficiencies': deficiency_names
             }
         
         except Exception as e:
             return {
                 'error': str(e),
-                'file': file_path
+                'file': file_path,
+                'message': f'Error: {str(e)}'
             }
     
-    def analyze_repository(self) -> Dict[str, Any]:
+    def analyze_repository(self, repo_path: str = None) -> Dict[str, Any]:
         """
         Analiza todos los archivos del repositorio
         Retorna: agregación de métricas
         """
+        target_path = repo_path or self.repo_path
+        
+        if not target_path:
+            return {
+                'error': 'No repository path provided',
+                'message': 'Se requiere especificar la ruta del repositorio'
+            }
+        
+        # Convertir a string por si recibe Path
+        target_path = str(target_path)
+        
+        if not os.path.exists(target_path):
+            return {
+                'error': f'Repository path not found: {target_path}',
+                'message': f'La ruta no existe: {target_path}'
+            }
+        
         file_metrics = []
-        total_loc = 0
-        total_complexity = 0
-        total_functions = 0
+        languages = {}
+        skipped_files = []
         
         # Recorrer directorio
-        for root, dirs, files in os.walk(self.repo_path):
+        for root, dirs, files in os.walk(target_path):
             # Saltar directorios comunes
-            dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', 'node_modules', '.venv', 'venv']]
+            dirs[:] = [d for d in dirs if d not in [
+                '.git', '__pycache__', 'node_modules', '.venv', 'venv',
+                'dist', 'build', '.pytest_cache', '.env'
+            ]]
             
             for file in files:
                 file_path = os.path.join(root, file)
                 _, ext = os.path.splitext(file_path)
                 
                 if ext in self.SUPPORTED_EXTENSIONS:
-                    metrics = self.analyze_file(file_path)
-                    
-                    if 'error' not in metrics:
-                        file_metrics.append(metrics)
-                        total_loc += metrics['loc']
-                        total_complexity += metrics['total_complexity']
-                        total_functions += metrics['functions_count']
+                    try:
+                        metrics = self.analyze_file(file_path)
+                        
+                        if 'error' not in metrics:
+                            file_metrics.append(metrics)
+                            lang = metrics['language']
+                            languages[lang] = languages.get(lang, 0) + 1
+                        else:
+                            skipped_files.append({
+                                'file': file_path,
+                                'reason': metrics.get('error', 'Unknown error')
+                            })
+                    except Exception as e:
+                        skipped_files.append({
+                            'file': file_path,
+                            'reason': str(e)
+                        })
         
-        return {
-            'repository': self.repo_path,
+        result = {
+            'repository': os.path.basename(target_path) or target_path,
             'files_analyzed': len(file_metrics),
-            'total_loc': total_loc,
-            'total_functions': total_functions,
-            'average_complexity': round(
-                total_complexity / total_functions if total_functions > 0 else 0, 2
-            ),
+            'languages': languages,
             'files': file_metrics
         }
+        
+        if not file_metrics:
+            result['error'] = 'No files analyzed'
+            result['message'] = f'No se encontraron archivos analizables en {target_path}'
+            result['skipped_files'] = skipped_files if skipped_files else []
+        
+        return result
     
-    def _detect_deficiencies(self, file_result) -> List[Dict[str, Any]]:
+    def _detect_deficiencies(self, function_list) -> List[Dict[str, Any]]:
         """
         Detecta deficiencias en el código basado en umbrales
         """
         deficiencies = []
         
-        for func in file_result.functions:
+        for func in function_list:
+            cc = func.cyclomatic_complexity
+            nloc = func.nloc
+            params = len(func.parameters) if hasattr(func, 'parameters') else 0
+            
             # Alta complejidad ciclomática
-            if func.cyclomatic_complexity > self.THRESHOLDS['cyclomatic_complexity_critical']:
+            if cc > self.THRESHOLDS['cyclomatic_complexity_critical']:
                 deficiencies.append({
                     'type': 'CRITICAL_COMPLEXITY',
                     'function': func.name,
                     'severity': 'CRITICAL',
-                    'value': func.cyclomatic_complexity,
-                    'threshold': self.THRESHOLDS['cyclomatic_complexity_critical']
+                    'value': cc
                 })
-            elif func.cyclomatic_complexity > self.THRESHOLDS['cyclomatic_complexity_high']:
+            elif cc > self.THRESHOLDS['cyclomatic_complexity_high']:
                 deficiencies.append({
                     'type': 'HIGH_COMPLEXITY',
                     'function': func.name,
                     'severity': 'HIGH',
-                    'value': func.cyclomatic_complexity,
-                    'threshold': self.THRESHOLDS['cyclomatic_complexity_high']
+                    'value': cc
                 })
             
             # Método muy largo
-            if func.lines > self.THRESHOLDS['loc_long_method']:
+            if nloc > self.THRESHOLDS['loc_long_method']:
                 deficiencies.append({
                     'type': 'LONG_METHOD',
                     'function': func.name,
                     'severity': 'MEDIUM',
-                    'value': func.lines,
-                    'threshold': self.THRESHOLDS['loc_long_method']
+                    'value': nloc
                 })
             
             # Muchos parámetros
-            if len(func.parameters) > self.THRESHOLDS['parameters_too_many']:
+            if params > self.THRESHOLDS['parameters_too_many']:
                 deficiencies.append({
                     'type': 'TOO_MANY_PARAMETERS',
                     'function': func.name,
                     'severity': 'MEDIUM',
-                    'value': len(func.parameters),
-                    'threshold': self.THRESHOLDS['parameters_too_many']
+                    'value': params
                 })
         
         return deficiencies
+
