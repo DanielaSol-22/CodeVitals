@@ -6,19 +6,27 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["'Space Grotesk'", 'system-ui', 'sans-serif'],
+        serif: ["'Lora'", 'Georgia', 'serif'],
+        mono: ["'JetBrains Mono'", 'monospace'],
+      },
       colors: {
-        cyan: {
-          50: '#ecf9ff',
-          100: '#d6f1ff',
-          200: '#b1e5ff',
-          300: '#7dd5ff',
-          400: '#41c4ff',
-          500: '#06b6d4',
-          600: '#0891b2',
-          700: '#0e7490',
-          800: '#155e75',
-          900: '#164e63',
-          950: '#0f3444',
+        ink: '#211B14',
+        paper: '#F2EEE3',
+        surface: '#FBF9F4',
+        line: '#DED5BD',
+        muted: '#6B5E44',
+        label: '#8A6B3F',
+        accent: {
+          DEFAULT: '#A6621F',
+          dark: '#7A4716',
+          soft: '#F0DFC9',
+        },
+        risk: {
+          low: '#3E6B37',
+          mid: '#8A6B1F',
+          high: '#A6421F',
         },
       },
     },

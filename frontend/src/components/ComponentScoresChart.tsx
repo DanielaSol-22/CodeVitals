@@ -11,12 +11,14 @@ import {
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 interface ComponentScoresChartProps {
+  // Coincide con RiskDetector.WEIGHTS: los 5 componentes reales de la
+  // formula ponderada de riesgo (ver marco teorico de la tesis).
   data: {
-    code_complexity: number;
+    cyclomatic_complexity: number;
+    code_churn: number;
+    lines_of_code: number;
     code_duplication: number;
-    comments_ratio: number;
-    test_coverage: number;
-    maintainability: number;
+    bus_factor: number;
   };
 }
 
@@ -25,21 +27,21 @@ export default function ComponentScoresChart({
 }: ComponentScoresChartProps) {
   const chartData = {
     labels: [
-      "Complejidad",
+      "Complejidad Ciclomática",
+      "Code Churn",
+      "Líneas de Código",
       "Duplicación",
-      "Comentarios",
-      "Cobertura de Tests",
-      "Mantenibilidad",
+      "Bus Factor",
     ],
     datasets: [
       {
         label: "Puntuación (0-100)",
         data: [
-          data.code_complexity,
+          data.cyclomatic_complexity,
+          data.code_churn,
+          data.lines_of_code,
           data.code_duplication,
-          data.comments_ratio,
-          data.test_coverage,
-          data.maintainability,
+          data.bus_factor,
         ],
         backgroundColor: "rgba(34, 211, 238, 0.6)",
         borderColor: "rgba(34, 211, 238, 1)",

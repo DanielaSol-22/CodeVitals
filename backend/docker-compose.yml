@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: codevitals_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: codevitals
+      POSTGRES_PASSWORD: codevitals
+      POSTGRES_DB: codevitals
+    ports:
+      - "5432:5432"
+    volumes:
+      - codevitals_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codevitals"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: codevitals_api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://codevitals:codevitals@db:5432/codevitals
+      DATABASE_URL_SYNC: postgresql+psycopg2://codevitals:codevitals@db:5432/codevitals
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./app:/code/app
+      # Monta aquí la carpeta que contiene los repositorios Git a analizar:
+      - ./repos:/code/repos
+
+volumes:
+  codevitals_pgdata:
+  

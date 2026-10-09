@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: "http://localhost:5000/api/v1",
+  baseURL: "http://localhost:8000/api/v1",
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
@@ -33,3 +33,13 @@ apiClient.interceptors.response.use(
 );
 
 export { apiClient };
+
+/** Mensaje legible para mostrar al usuario a partir de un error de Axios. */
+export function errorMessage(err: any, fallback = "No se pudo obtener datos"): string {
+  const detail = err?.response?.data?.detail;
+  if (typeof detail === "string" && detail) return detail;
+  if (Array.isArray(detail) && detail[0]?.msg) return String(detail[0].msg);
+  if (err?.code === "ECONNABORTED") return "El análisis tardó demasiado. Intenta de nuevo con un repositorio más pequeño.";
+  if (!err?.response) return "No hay conexión con la API. Verifica que el backend esté en ejecución.";
+  return fallback;
+}

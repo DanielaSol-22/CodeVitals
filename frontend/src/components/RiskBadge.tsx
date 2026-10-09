@@ -1,33 +1,37 @@
-import { CheckCircle, AlertCircle, AlertTriangle } from "lucide-react";
-
 interface RiskBadgeProps {
   score: number;
   size?: "sm" | "md" | "lg";
 }
 
+const LEVELS = [
+  { max: 33, label: "Bajo", border: "border-risk-low", text: "text-risk-low", dot: "bg-risk-low" },
+  { max: 66, label: "Medio", border: "border-risk-mid", text: "text-risk-mid", dot: "bg-risk-mid" },
+  { max: Infinity, label: "Alto", border: "border-risk-high", text: "text-risk-high", dot: "bg-risk-high" },
+];
+
+function levelFor(score: number) {
+  return LEVELS.find((l) => score <= l.max) || LEVELS[LEVELS.length - 1];
+}
+
+const SIZES = {
+  sm: { score: "text-sm", label: "text-xs", dot: "w-2 h-2" },
+  md: { score: "text-base", label: "text-xs", dot: "w-2.5 h-2.5" },
+  lg: { score: "text-2xl", label: "text-xs", dot: "w-3 h-3" },
+};
+
 export default function RiskBadge({ score, size = "md" }: RiskBadgeProps) {
-  const getRiskLevel = (score: number) => {
-    if (score <= 33) return { level: "LOW", color: "text-green-400", bg: "bg-green-900/30", border: "border-green-500/30", icon: CheckCircle };
-    if (score <= 66) return { level: "MEDIUM", color: "text-amber-400", bg: "bg-amber-900/30", border: "border-amber-500/30", icon: AlertCircle };
-    return { level: "HIGH", color: "text-red-400", bg: "bg-red-900/30", border: "border-red-500/30", icon: AlertTriangle };
-  };
-
-  const risk = getRiskLevel(score);
-  const Icon = risk.icon;
-
-  const sizeConfig = {
-    sm: "px-3 py-1 text-xs",
-    md: "px-4 py-2 text-sm",
-    lg: "px-6 py-3 text-base",
-  };
+  const level = levelFor(score);
+  const s = SIZES[size];
 
   return (
-    <div className={`${risk.bg} border ${risk.border} rounded-lg ${sizeConfig[size]} inline-flex items-center gap-2`}>
-      <Icon size={size === "sm" ? 14 : size === "md" ? 16 : 20} className={risk.color} />
-      <div>
-        <p className={`font-semibold ${risk.color}`}>{score}</p>
-        <p className="text-slate-400 text-xs">{risk.level}</p>
-      </div>
+    <div
+      className="inline-flex items-center gap-2"
+      role="img"
+      aria-label={`Nivel de riesgo: ${level.label} (${score})`}
+    >
+      <span className={`${s.dot} ${level.dot} inline-block flex-shrink-0`} />
+      <span className={`font-mono font-bold ${s.score} text-ink`}>{score}</span>
+      <span className={`font-semibold ${s.label} ${level.text}`}>{level.label}</span>
     </div>
   );
 }

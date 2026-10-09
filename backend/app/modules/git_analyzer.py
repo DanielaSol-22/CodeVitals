@@ -21,11 +21,13 @@ class GitAnalyzer:
         """
         self.repo_url = repo_url
         self.repo_path = repo_path or self._get_default_path(repo_url)
-    
+        # PyDriller exige que clone_repo_to ya exista como directorio
+        # (el crea el la subcarpeta del repo adentro automaticamente).
+        os.makedirs(self.repo_path, exist_ok=True)
+
     def _get_default_path(self, url: str) -> str:
-        """Obtiene la ruta por defecto para clonar"""
-        repo_name = url.split('/')[-1].replace('.git', '')
-        return f"./repos/{repo_name}"
+        """Carpeta base donde PyDriller clonara los repositorios."""
+        return "./repos"
     
     def analyze_repository(self) -> Dict[str, Any]:
         """
@@ -43,14 +45,14 @@ class GitAnalyzer:
                 commits.append({
                     'hash': commit.hash,
                     'author': commit.author.name,
-                    'date': commit.commit_date,
+                    'date': commit.committer_date,
                     'message': commit.msg,
-                    'files': len(commit.files)
+                    'files': commit.files
                 })
                 authors.add(commit.author.name)
                 
                 # Contar cambios por archivo
-                for file in commit.files:
+                for file in commit.modified_files:
                     if file.filename not in files_changed:
                         files_changed[file.filename] = {
                             'additions': 0,
@@ -92,7 +94,7 @@ class GitAnalyzer:
             commits_touching_file = 0
             
             for commit in repo.traverse_commits():
-                for file in commit.files:
+                for file in commit.modified_files:
                     if file.filename == file_path:
                         total_additions += file.added_lines
                         total_deletions += file.deleted_lines
@@ -132,7 +134,7 @@ class GitAnalyzer:
                 
                 author_commits[author] += 1
                 
-                for file in commit.files:
+                for file in commit.modified_files:
                     author_files[author].add(file.filename)
             
             total_commits = sum(author_commits.values())
