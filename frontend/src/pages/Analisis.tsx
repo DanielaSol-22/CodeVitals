@@ -122,7 +122,7 @@ export default function Analisis() {
               {top.map((m) => (
                 <tr key={m.path} className="border-b border-[#eef0f7]">
                   <td className="px-3 py-3"><span className="flex items-center gap-2"><Icon name="file" size={14} className="text-muted" />{m.path}</span></td>
-                  <td className="px-3 py-3 tabular-nums"><span className="flex items-center gap-2"><span aria-hidden="true" className={`h-2 w-2 rounded-sm ${LEVEL_CLASS[m.level].dot}`} />{m.cc}</span></td>
+                  <td className="px-3 py-3 tabular-nums"><span className="flex items-center gap-2"><span aria-hidden="true" className={`h-2 w-2 rounded-xs ${LEVEL_CLASS[m.level].dot}`} />{m.cc}</span></td>
                   <td className="px-3 py-3 tabular-nums">{m.churn}</td>
                   <td className="px-3 py-3 tabular-nums">{m.loc.toLocaleString('es-GT')}</td>
                   <td className="px-2 text-soft"><Icon name="chevR" size={14} strokeWidth={2} /></td>

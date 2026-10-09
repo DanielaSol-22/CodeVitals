@@ -1,6 +1,39 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+
+  --color-navy: #131b33;
+  --color-navy-2: #1a2440;
+  --color-navy-line: #33405f;
+  --color-navy-text: #d6dcf0;
+  --color-navy-mute: #8e98b8;
+  --color-canvas: #f3f5fb;
+  --color-line: #e6e9f4;
+  --color-ink: #141b34;
+  --color-soft: #4a5378;
+  --color-muted: #6b7497;
+  --color-brand: #4f46e5;
+  --color-brand-50: #f0f1fb;
+
+  --color-risk-low: #2f9e63;
+  --color-risk-low-bg: #e3f5ec;
+  --color-risk-low-fg: #237a4d;
+  --color-risk-low-bar: #4caf7d;
+  --color-risk-med: #f0a020;
+  --color-risk-med-bg: #fff0d0;
+  --color-risk-med-fg: #8f5a05;
+  --color-risk-med-bar: #fbc558;
+  --color-risk-high: #e04d4d;
+  --color-risk-high-bg: #fde8e8;
+  --color-risk-high-fg: #b42e2e;
+  --color-risk-high-bar: #f28c8c;
+}
+
+/* Tailwind 4 usa currentColor por defecto en los bordes; se conserva el gris de la v3. */
+@layer base {
+  *, ::after, ::before, ::backdrop, ::file-selector-button { border-color: #e5e7eb; }
+}
 
 html, body, #root { min-height: 100%; }
 body { @apply bg-canvas font-sans text-ink antialiased; margin: 0; }

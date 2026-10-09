@@ -21,7 +21,7 @@ export default function App() {
       <MobileTopBar />
       <div className="flex gap-5 p-0 lg:p-2">
         <Sidebar />
-        <main id="contenido" tabIndex={-1} aria-busy={loading} className="min-w-0 flex-1 px-4 pb-24 pt-5 outline-none lg:px-2 lg:pb-8 lg:pt-3">
+        <main id="contenido" tabIndex={-1} aria-busy={loading} className="min-w-0 flex-1 px-4 pb-24 pt-5 outline-hidden lg:px-2 lg:pb-8 lg:pt-3">
           <div className={`mx-auto flex max-w-[1180px] flex-col gap-5 transition-opacity duration-200 ${loading ? 'opacity-60' : ''}`}>
             <ErrorBoundary key={pathname}>
               <Suspense fallback={<PageSkeleton />}>
