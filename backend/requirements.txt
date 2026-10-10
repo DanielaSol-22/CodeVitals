@@ -11,3 +11,6 @@ lizard==1.17.10
 gitpython==3.1.30
 alembic==1.13.2
 python-multipart==0.0.9
+numpy==1.26.4
+scipy==1.13.1
+pytest==8.3.3

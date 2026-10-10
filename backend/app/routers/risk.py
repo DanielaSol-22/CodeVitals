@@ -86,12 +86,27 @@ def _cloned_repo_dir(git: GitAnalyzer) -> str:
     return git.repo_path
 
 
+# Un archivo con muy pocos commits tiene "bus factor 100 %" de forma trivial
+# (un solo commit = un solo autor). Por debajo de este minimo se usa el valor
+# del repositorio, que es mas representativo.
+MIN_COMMITS_FILE_BUS_FACTOR = 3
+
+
 def _git_metrics_for_file(git: GitAnalyzer, file_path: str, bus_factor_risk: float) -> dict:
     churn = git.calculate_code_churn(file_path)
+    ok = "error" not in churn
+    commits = churn.get("total_changes", 0) if ok else 0
+
+    # Bus factor POR ARCHIVO (concentracion de commits en su autor principal).
+    file_bf = git.calculate_file_bus_factor(file_path)
+    file_risk = file_bf.get("risk_percentage")
+    if file_risk is None or file_bf.get("commits", 0) < MIN_COMMITS_FILE_BUS_FACTOR:
+        file_risk = bus_factor_risk  # historial insuficiente: valor del repositorio
+
     return {
-        "total_commits": churn.get("total_changes", 0) if "error" not in churn else 0,
-        "total_churn": churn.get("total_churn", 0) if "error" not in churn else 0,
-        "risk_percentage": bus_factor_risk,
+        "total_commits": commits,
+        "total_churn": churn.get("total_churn", 0) if ok else 0,
+        "risk_percentage": file_risk,
     }
 
 
@@ -104,6 +119,9 @@ def _analyze_all_modules(repo_url: str, repo_path: str | None) -> tuple[list[dic
     # o la carpeta todavia estara vacia. De paso, nos da el total de commits
     # del repositorio (requisito de historial minimo).
     bus_factor = git.calculate_bus_factor()
+    if "error" in bus_factor and not os.path.isdir(cloned_dir):
+        # El clonado fallo (repo privado, inexistente...): se informa el motivo real.
+        raise HTTPException(status_code=400, detail=bus_factor["error"])
     bus_factor_risk = bus_factor.get("risk_percentage", 0) if "error" not in bus_factor else 0
     repo_total_commits = bus_factor.get("total_commits", 0) if "error" not in bus_factor else 0
 

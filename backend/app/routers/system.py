@@ -33,6 +33,11 @@ def api_info():
                 "POST /api/v1/metrics/file",
                 "POST /api/v1/metrics/summary",
             ],
+            "statistics": [
+                "POST /api/v1/stats/validation",
+                "POST /api/v1/stats/validation/multi",
+                "GET /api/v1/stats/validation?repo_url=...",
+            ],
             "system": ["GET /health", "GET /api/v1/info"],
         },
         "risk_formula": (

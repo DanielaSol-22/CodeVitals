@@ -71,4 +71,20 @@ class Recomendacion(Base):
     texto: Mapped[str] = mapped_column(Text)
  
     riesgo: Mapped["Riesgo"] = relationship(back_populates="recomendaciones")
-    
+
+
+class ResultadoEstadistico(Base):
+    """Resultado de una prueba estadística (Spearman o Chi-cuadrado) para una métrica."""
+    __tablename__ = "resultados_estadisticos"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    repo_url: Mapped[str] = mapped_column(String(1024), index=True)
+    nombre: Mapped[str] = mapped_column(String(255))
+    prueba: Mapped[str] = mapped_column(String(20))  # spearman | chi_square
+    variable: Mapped[str] = mapped_column(String(50))
+    estadistico: Mapped[float | None] = mapped_column(Float, nullable=True)  # rho o chi2
+    valor_p: Mapped[float | None] = mapped_column(Float, nullable=True)
+    n: Mapped[int] = mapped_column(Integer, default=0)
+    significativo: Mapped[bool] = mapped_column(default=False)
+    interpretacion: Mapped[str] = mapped_column(Text)
+    fecha_calculo: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

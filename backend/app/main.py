@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.database import init_db
-from app.routers import git_analysis, metrics, risk, system
+from app.routers import git_analysis, metrics, risk, statistics, system
 
 settings = get_settings()
 
@@ -44,6 +44,7 @@ def create_app() -> FastAPI:
     app.include_router(git_analysis.router)
     app.include_router(metrics.router)
     app.include_router(risk.router)
+    app.include_router(statistics.router)
 
     return app
 
