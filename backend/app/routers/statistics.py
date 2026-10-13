@@ -7,12 +7,13 @@ import asyncio
 
 from fastapi.concurrency import run_in_threadpool
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import models
 from app.database import get_db
+from app import security
 from app.modules import statistics_analyzer as sa
 from app.routers.risk import _analyze_all_modules, _cloned_repo_dir
 
@@ -26,10 +27,25 @@ class StatsRequest(BaseModel):
     repo_path: str | None = None
     alpha: float = Field(default=sa.ALPHA_DEFAULT, gt=0, lt=1)
 
+    @field_validator("repo_url")
+    @classmethod
+    def _check_url(cls, v: str) -> str:
+        return security.validate_repo_url(v)
+
+    @field_validator("repo_path")
+    @classmethod
+    def _check_path(cls, v: str | None) -> str | None:
+        return security.validate_repo_path(v)
+
 
 class MultiStatsRequest(BaseModel):
     repo_urls: list[str] = Field(min_length=1, max_length=20)
     alpha: float = Field(default=sa.ALPHA_DEFAULT, gt=0, lt=1)
+
+    @field_validator("repo_urls")
+    @classmethod
+    def _check_urls(cls, v: list[str]) -> list[str]:
+        return list(dict.fromkeys(security.validate_repo_url(u) for u in v))
 
 
 async def _persist(db: AsyncSession, repo_url: str, result: dict) -> None:

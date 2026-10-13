@@ -6,12 +6,15 @@ Estas son las rutas que consume el frontend (Dashboard, ModuleAnalysis, Priority
   POST /api/v1/risk/priority
 """
 import os
+import threading
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func, select
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.concurrency import run_in_threadpool
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import models
+from app import models, security
+from app.config import get_settings
 from app.database import get_db
 from app.modules.git_analyzer import GitAnalyzer
 from app.modules.metrics_calculator import MetricsCalculator
@@ -59,20 +62,25 @@ async def _persist_analysis(
                 modulo_id=modulo.id,
                 complejidad_ciclomatica=code.get("cyclomatic_complexity", 0),
                 loc=code.get("lines_of_code", 0),
-                codigo_duplicado_pct=0.0,
+                codigo_duplicado_pct=code.get("duplication_percent", 0.0),
                 code_churn=git_m.get("code_churn", 0),
                 bus_factor=int(git_m.get("bus_factor_risk", 0)),
                 numero_commits=git_m.get("commits", 0),
                 numero_funciones=code.get("functions_count", 0),
             )
         )
-        db.add(
-            models.Riesgo(
-                modulo_id=modulo.id,
-                puntaje=risk["risk_score"],
-                clasificacion=risk["classification"],
-            )
+        riesgo = models.Riesgo(
+            modulo_id=modulo.id,
+            puntaje=risk["risk_score"],
+            clasificacion=risk["classification"],
         )
+        db.add(riesgo)
+        await db.flush()
+        for rec in m.get("recommendations", []):
+            db.add(models.Recomendacion(
+                riesgo_id=riesgo.id,
+                texto=f"[{rec['priority']}] {rec['action']} ({rec['reason']})",
+            ))
 
     await db.commit()
 
@@ -80,9 +88,10 @@ async def _persist_analysis(
 def _cloned_repo_dir(git: GitAnalyzer) -> str:
     """Carpeta real donde PyDriller deja el clon (clone_repo_to es la carpeta
     padre; PyDriller crea el la subcarpeta con el nombre del repo adentro)."""
+    if git.is_local():
+        return git._local_dir()
     if git.repo_path == git._get_default_path(git.repo_url):
-        repo_name = git.repo_url.rstrip("/").split("/")[-1].replace(".git", "")
-        return os.path.join(git.repo_path, repo_name)
+        return os.path.join(git.repo_path, git._repo_name())
     return git.repo_path
 
 
@@ -106,11 +115,54 @@ def _git_metrics_for_file(git: GitAnalyzer, file_path: str, bus_factor_risk: flo
     return {
         "total_commits": commits,
         "total_churn": churn.get("total_churn", 0) if ok else 0,
+        "lines_added": churn.get("additions", 0) if ok else 0,
+        "lines_deleted": churn.get("deletions", 0) if ok else 0,
         "risk_percentage": file_risk,
+        "top_author": file_bf.get("top_author"),
+        "file_commits": file_bf.get("commits", 0),
     }
 
 
+# Caché del análisis completo: el frontend pide /repository y /priority a la vez,
+# y ambos necesitan exactamente los mismos módulos. Se reutiliza mientras el HEAD
+# del repositorio no cambie; el lock evita calcularlo dos veces en paralelo.
+_ANALYSIS_CACHE: dict[tuple, tuple[str, list[dict], GitAnalyzer, int]] = {}
+_ANALYSIS_LOCKS: dict[tuple, threading.Lock] = {}
+_ANALYSIS_GUARD = threading.Lock()
+
+
 def _analyze_all_modules(repo_url: str, repo_path: str | None) -> tuple[list[dict], GitAnalyzer, int]:
+    key = (repo_url, repo_path)
+    with _ANALYSIS_GUARD:
+        lock = _ANALYSIS_LOCKS.setdefault(key, threading.Lock())
+    with lock:
+        git = GitAnalyzer(repo_url, repo_path)
+        cached = _ANALYSIS_CACHE.get(key)
+        if cached is not None:
+            try:
+                if git.head_sha() == cached[0]:
+                    return list(cached[1]), cached[2], cached[3]
+            except Exception:
+                pass  # clon inaccesible: se recalcula y se informa el error real
+        modules, git, total = _analyze_uncached(repo_url, repo_path)
+        try:
+            _ANALYSIS_CACHE[key] = (git.head_sha(), modules, git, total)
+        except Exception:
+            pass
+        return list(modules), git, total
+
+
+# Limita cuantos analisis pesados (clonado + lectura de historial) corren a la vez,
+# para que varias solicitudes simultaneas no agoten CPU, memoria ni disco.
+_ANALYSIS_SLOTS = threading.BoundedSemaphore(get_settings().max_parallel_analyses)
+
+
+def _analyze_uncached(repo_url: str, repo_path: str | None) -> tuple[list[dict], GitAnalyzer, int]:
+    with _ANALYSIS_SLOTS:
+        return _analyze_uncached_unlimited(repo_url, repo_path)
+
+
+def _analyze_uncached_unlimited(repo_url: str, repo_path: str | None) -> tuple[list[dict], GitAnalyzer, int]:
     git = GitAnalyzer(repo_url, repo_path)
     cloned_dir = _cloned_repo_dir(git)
 
@@ -142,7 +194,8 @@ def _analyze_all_modules(repo_url: str, repo_path: str | None) -> tuple[list[dic
 
 @router.post("/repository")
 async def risk_repository(payload: RiskRepositoryRequest, db: AsyncSession = Depends(get_db)):
-    modules, git, repo_total_commits = _analyze_all_modules(payload.repo_url, payload.repo_path)
+    # El análisis es síncrono y pesado: va a un hilo para no bloquear el event loop.
+    modules, git, repo_total_commits = await run_in_threadpool(_analyze_all_modules, payload.repo_url, payload.repo_path)
     repo_analysis = _risk_detector.analyze_repository(modules)
     if "error" in repo_analysis:
         raise HTTPException(status_code=400, detail=repo_analysis["message"])
@@ -176,9 +229,14 @@ async def risk_repository(payload: RiskRepositoryRequest, db: AsyncSession = Dep
             "deficiency_count": len(m["code_metrics"].get("deficiencies", [])),
             "cyclomatic_complexity": m["code_metrics"].get("cyclomatic_complexity", 0),
             "churn_commits": m["git_metrics"].get("commits", 0),
+            "modification_frequency": m["git_metrics"].get("modification_frequency", 0),
+            "code_churn_lines": m["git_metrics"].get("code_churn", 0),
+            "cognitive_complexity": m["code_metrics"].get("cognitive_complexity"),
             "bus_factor_risk": m["git_metrics"].get("bus_factor_risk", 0),
             "justification": m["risk_analysis"].get("justification", ""),
             "recommended_action": _risk_detector._recommend_action(m["risk_analysis"]["classification"]),
+            "recommended_actions": [r["action"] for r in m.get("recommendations", [])],
+            "recommendations": m.get("recommendations", []),
         }
         for m in risky[:10]
     ]
@@ -209,7 +267,10 @@ def risk_module(payload: RiskModuleRequest):
     bus_factor_risk = bus_factor.get("risk_percentage", 0) if "error" not in bus_factor else 0
     repo_total_commits = bus_factor.get("total_commits", 0) if "error" not in bus_factor else 0
 
-    full_path = os.path.join(cloned_dir, payload.file_path)
+    try:
+        full_path = security.safe_join(cloned_dir, payload.file_path)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     code_metrics = MetricsCalculator().analyze_file(full_path)
     if "error" in code_metrics:
         raise HTTPException(status_code=400, detail=code_metrics.get("message", code_metrics["error"]))
@@ -230,8 +291,11 @@ def risk_module(payload: RiskModuleRequest):
         "difficulty_rating": risk.get("difficulty_rating", ""),
         "maintenance_difficulty_index": risk.get("maintenance_difficulty_index", 0),
         "recommended_action": _risk_detector._recommend_action(risk["classification"]),
+        "recommended_actions": [r["action"] for r in module.get("recommendations", [])],
+        "recommendations": module.get("recommendations", []),
         "loc": code["lines_of_code"],
         "complexity": code["cyclomatic_complexity"],
+        "cognitive_complexity": code.get("cognitive_complexity"),
         "num_functions": code["functions_count"],
         "deficiency_count": len(code["deficiencies"]),
         "deficiencies": [
@@ -250,6 +314,10 @@ def risk_module(payload: RiskModuleRequest):
         "git_metrics": {
             "commits": git_m["commits"],
             "churn": git_m["code_churn"],
+            "churn_lines": git_m["code_churn"],
+            "modification_frequency": git_m["commits"],
+            "lines_added": git_m.get("lines_added", 0),
+            "lines_deleted": git_m.get("lines_deleted", 0),
             "bus_factor": git_m["bus_factor_risk"],
             # GitAnalyzer no calcula antiguedad de archivo todavia.
             "file_age_days": 0,
@@ -281,6 +349,7 @@ def risk_priority(payload: RiskRepositoryRequest):
         raise HTTPException(status_code=400, detail=repo_analysis["message"])
 
     priority = _risk_detector.generate_priority_list(repo_analysis, payload.limit)
+    recs_by_file = {m["file"]: m.get("recommendations", []) for m in modules}
 
     return {
         "modules": [
@@ -289,7 +358,8 @@ def risk_priority(payload: RiskRepositoryRequest):
                 "risk_score": p["risk_score"],
                 "classification": p["classification"],
                 "deficiency_count": p["deficiencies_count"],
-                "recommended_actions": [p["action"]],
+                "recommended_actions": [r["action"] for r in recs_by_file.get(p["file"], [])] or [p["action"]],
+                "recommendations": recs_by_file.get(p["file"], []),
             }
             for p in priority
         ]
@@ -305,33 +375,27 @@ async def risk_repositories(db: AsyncSession = Depends(get_db)):
     )
     repos = result.scalars().all()
 
+    # Una sola consulta agregada para todos los repositorios (antes eran 2 por repo).
+    agg = await db.execute(
+        select(
+            models.Modulo.repositorio_id,
+            func.count(models.Riesgo.id),
+            func.coalesce(func.avg(models.Riesgo.puntaje), 0.0),
+            func.coalesce(func.sum(case((models.Riesgo.clasificacion == "HIGH", 1), else_=0)), 0),
+            func.coalesce(func.sum(case((models.Riesgo.clasificacion == "MEDIUM", 1), else_=0)), 0),
+        )
+        .join(models.Riesgo, models.Riesgo.modulo_id == models.Modulo.id)
+        .group_by(models.Modulo.repositorio_id)
+    )
+    stats = {row[0]: row[1:] for row in agg.all()}
+
     history = []
     for repo in repos:
-        mod_result = await db.execute(
-            select(models.Modulo.id).where(models.Modulo.repositorio_id == repo.id)
-        )
-        modulo_ids = [row[0] for row in mod_result.all()]
-        total_modulos = len(modulo_ids)
-
-        avg_score = 0.0
-        high_count = 0
-        medium_count = 0
-        if modulo_ids:
-            riesgo_result = await db.execute(
-                select(models.Riesgo.puntaje, models.Riesgo.clasificacion).where(
-                    models.Riesgo.modulo_id.in_(modulo_ids)
-                )
-            )
-            riesgos = riesgo_result.all()
-            if riesgos:
-                avg_score = round(sum(r[0] for r in riesgos) / len(riesgos), 2)
-                high_count = sum(1 for r in riesgos if r[1] == "HIGH")
-                medium_count = sum(1 for r in riesgos if r[1] == "MEDIUM")
-
+        total_modulos, avg, high_count, medium_count = stats.get(repo.id, (0, 0.0, 0, 0))
+        avg_score = round(float(avg), 2)
         avg_classification = (
             "HIGH" if avg_score >= 70 else "MEDIUM" if avg_score >= 40 else "LOW"
         )
-
         history.append(
             {
                 "id": repo.id,
@@ -341,12 +405,52 @@ async def risk_repositories(db: AsyncSession = Depends(get_db)):
                 "total_modulos": total_modulos,
                 "average_risk_score": avg_score,
                 "classification": avg_classification,
-                "high_risk_modules": high_count,
-                "medium_risk_modules": medium_count,
+                "high_risk_modules": int(high_count),
+                "medium_risk_modules": int(medium_count),
             }
         )
 
     return {"history": history}
+
+
+@router.get("/history")
+async def risk_history(repo_url: str, limit: int = Query(30, ge=1, le=365), db: AsyncSession = Depends(get_db)):
+    try:
+        repo_url = security.validate_repo_url(repo_url)  # misma forma con la que se guardó
+    except ValueError:
+        pass  # no es una URL válida: simplemente no habrá historial
+    """Evolución en el tiempo: un punto por cada análisis guardado del repositorio,
+    con promedios de sus métricas (alimenta la pantalla Análisis)."""
+    limit = max(1, min(limit, 200))
+    rows = await db.execute(
+        select(
+            models.Repositorio.id,
+            models.Repositorio.fecha_analisis,
+            func.count(models.Modulo.id),
+            func.avg(models.Riesgo.puntaje),
+            func.avg(models.Metrica.complejidad_ciclomatica),
+            func.avg(models.Metrica.codigo_duplicado_pct),
+            func.avg(models.Metrica.loc),
+            func.avg(models.Metrica.code_churn),
+        )
+        .join(models.Modulo, models.Modulo.repositorio_id == models.Repositorio.id)
+        .join(models.Riesgo, models.Riesgo.modulo_id == models.Modulo.id)
+        .join(models.Metrica, models.Metrica.modulo_id == models.Modulo.id)
+        .where(models.Repositorio.url_remota == repo_url)
+        .group_by(models.Repositorio.id, models.Repositorio.fecha_analisis)
+        .order_by(models.Repositorio.fecha_analisis.desc())
+        .limit(limit)
+    )
+    r2 = lambda v: round(float(v or 0), 2)  # noqa: E731
+    points = [
+        {
+            "id": r[0], "fecha_analisis": r[1].isoformat(), "total_modulos": r[2],
+            "average_risk_score": r2(r[3]), "average_complexity": r2(r[4]),
+            "average_duplication": r2(r[5]), "average_loc": r2(r[6]), "average_churn": r2(r[7]),
+        }
+        for r in reversed(rows.all())
+    ]
+    return {"repo_url": repo_url, "history": points}
 
 
 @router.get("/stats")

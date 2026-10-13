@@ -6,6 +6,7 @@ Opción A — Endpoints de análisis Git (historial, churn, bus factor).
 """
 from fastapi import APIRouter, HTTPException
 
+from app import security
 from app.modules.git_analyzer import GitAnalyzer
 from app.schemas import RepositoryRequest
 
@@ -27,6 +28,12 @@ def get_file_churn(repo_name: str, file_path: str, repo_url: str, repo_path: str
     repo_url se pasa como query param (igual que en la versión Flask);
     repo_name queda solo como identificador legible en la URL.
     """
+    try:
+        repo_url = security.validate_repo_url(repo_url)
+        repo_path = security.validate_repo_path(repo_path)
+        file_path = security.validate_relative_file(file_path)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     analyzer = GitAnalyzer(repo_url, repo_path)
     result = analyzer.calculate_code_churn(file_path)
     if "error" in result:

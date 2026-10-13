@@ -23,6 +23,7 @@ const PATHS = {
   calendar: 'M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2zM3 10h18M8 3v4M16 3v4',
   download: 'M12 4v11M7 11l5 5 5-5M5 20h14',
   menu: 'M4 7h16M4 12h16M4 17h16',
+  stats: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
   check: 'M5 12l5 5 9-10',
 } as const
 

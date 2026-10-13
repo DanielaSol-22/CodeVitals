@@ -14,6 +14,15 @@ export interface CommitRef {
   when: string
 }
 
+export type RecPriority = 'ALTA' | 'MEDIA' | 'BAJA'
+
+export interface Recommendation {
+  factor: string
+  priority: RecPriority
+  action: string
+  reason: string
+}
+
 export interface ModuleRow {
   path: string
   level: RiskLevel
@@ -23,8 +32,14 @@ export interface ModuleRow {
   loc: number
   busFactor: number
   deficiencies: number
+  /** Complejidad cognitiva (solo Python; null en otros lenguajes). */
+  cognitive?: number | null
+  /** Líneas agregadas y eliminadas (code churn). `churn` es la frecuencia: número de commits. */
+  churnLines?: number
   scores: ComponentScores
   actions: string[]
+  justification?: string
+  recommendations?: Recommendation[]
   commits: CommitRef[]
 }
 

@@ -2,7 +2,13 @@ import { useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from './Icon'
 import { RiskPill } from './RiskPill'
-import type { ModuleRow } from '../lib/types'
+import type { ModuleRow, RecPriority } from '../lib/types'
+
+const PRIORITY_STYLE: Record<RecPriority, string> = {
+  ALTA: 'bg-[#fde8e8] text-[#b42318]',
+  MEDIA: 'bg-[#fff1d6] text-[#9a5b00]',
+  BAJA: 'bg-[#e3f4ea] text-[#17703f]',
+}
 
 const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 
@@ -35,7 +41,9 @@ export function ModuleDetail({ module: m, onClose }: { module: ModuleRow; onClos
 
   const summary: [string, string][] = [
     ['Complejidad (CC)', String(m.cc)],
-    ['Churn', String(m.churn)],
+    ['Frecuencia de cambios (commits)', String(m.churn)],
+    ...(m.churnLines ? [['Code churn (líneas)', m.churnLines.toLocaleString('es-GT')] as [string, string]] : []),
+    ...(m.cognitive != null ? [['Complejidad cognitiva', String(m.cognitive)] as [string, string]] : []),
     ['Líneas de código', m.loc.toLocaleString('es-GT')],
     ['Bus factor', `${m.busFactor}%`],
     ['Deficiencias', String(m.deficiencies)],
@@ -52,7 +60,7 @@ export function ModuleDetail({ module: m, onClose }: { module: ModuleRow; onClos
           <button ref={closeBtn} aria-label="Cerrar" onClick={onClose} className="-mr-2 flex h-11 w-11 items-center justify-center text-soft"><Icon name="close" size={16} strokeWidth={2.2} /></button>
         </div>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_1.2fr]">
+        <div className="mt-4 grid gap-4 sm:grid-cols-[0.8fr_1.4fr]">
           <section className="rounded-lg border border-line p-4">
             <h3 className="mb-2 text-[13px] font-bold">Resumen</h3>
             <dl>
@@ -61,9 +69,23 @@ export function ModuleDetail({ module: m, onClose }: { module: ModuleRow; onClos
               ))}
             </dl>
           </section>
-          <section className="rounded-lg border border-line p-4">
+          <section className="min-w-0 rounded-lg border border-line p-4">
             <h3 className="mb-2 text-[13px] font-bold">Recomendaciones</h3>
-            {m.actions.length === 0 ? <p className="text-xs text-muted">Sin recomendaciones para este módulo.</p> : (
+            {m.justification && <p className="mb-3 rounded-md bg-canvas px-3 py-2 text-xs leading-relaxed text-soft">{m.justification}</p>}
+            {m.recommendations && m.recommendations.length > 0 ? (
+              <ol className="flex flex-col gap-3">
+                {m.recommendations.map((r) => (
+                  <li key={r.factor + r.action} className="text-xs leading-relaxed">
+                    <div className="mb-1 flex items-center gap-2">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${PRIORITY_STYLE[r.priority]}`}>{r.priority}</span>
+                      <span className="font-semibold capitalize text-ink">{r.factor}</span>
+                    </div>
+                    <p className="text-ink">{r.action}</p>
+                    {r.reason && <p className="mt-1 text-[11px] text-muted">Por qué: {r.reason}</p>}
+                  </li>
+                ))}
+              </ol>
+            ) : m.actions.length === 0 ? <p className="text-xs text-muted">Sin recomendaciones para este módulo.</p> : (
               <ul className="flex flex-col gap-2">
                 {m.actions.map((a) => <li key={a} className="flex gap-2.5 text-xs leading-relaxed text-soft"><span className="text-brand" aria-hidden="true">•</span>{a}</li>)}
               </ul>

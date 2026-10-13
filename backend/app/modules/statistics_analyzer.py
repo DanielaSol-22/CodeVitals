@@ -32,7 +32,7 @@ METRICS: dict[str, tuple[str, Any]] = {
         lambda m: m["code_metrics"].get("lines_of_code", 0),
     ),
     "code_churn": (
-        "Code churn (commits)",
+        "Frecuencia de modificaciones (commits)",
         lambda m: m["git_metrics"].get("commits", 0),
     ),
     "code_duplication": (
@@ -43,7 +43,20 @@ METRICS: dict[str, tuple[str, Any]] = {
         "Bus factor (riesgo %)",
         lambda m: m["git_metrics"].get("bus_factor_risk", 0),
     ),
+    # Metricas medidas que NO forman parte de la formula del puntaje: su relacion con el
+    # puntaje no es circular, por lo que aportan evidencia independiente de validez.
+    "cognitive_complexity": (
+        "Complejidad cognitiva",
+        lambda m: m["code_metrics"].get("cognitive_complexity"),
+    ),
+    "churn_lines": (
+        "Code churn (líneas agregadas y eliminadas)",
+        lambda m: m["git_metrics"].get("code_churn", 0),
+    ),
 }
+
+# Metricas que componen la formula del puntaje (las demas se reportan como complementarias).
+IN_FORMULA = {"cyclomatic_complexity", "lines_of_code", "code_churn", "code_duplication", "bus_factor"}
 
 
 def _clean(values) -> np.ndarray:
@@ -175,8 +188,9 @@ def analyze_modules(modules: list[dict], alpha: float = ALPHA_DEFAULT) -> dict[s
     for key, (label, getter) in METRICS.items():
         values = [getter(m) for m in modules]
         descriptives[key] = {"label": label, **descriptive(values)}
-        correlations.append({"variable": key, "label": label, **spearman(values, scores, alpha)})
-        chi_squares.append({"variable": key, "label": label, **chi_square(values, classes, alpha)})
+        in_formula = key in IN_FORMULA
+        correlations.append({"variable": key, "label": label, "in_formula": in_formula, **spearman(values, scores, alpha)})
+        chi_squares.append({"variable": key, "label": label, "in_formula": in_formula, **chi_square(values, classes, alpha)})
 
     n = len(modules)
     return {
@@ -189,6 +203,7 @@ def analyze_modules(modules: list[dict], alpha: float = ALPHA_DEFAULT) -> dict[s
         "note": (
             "Spearman correlaciona cada métrica con el puntaje de riesgo (que a su vez se calcula "
             "con estas métricas), por lo que una correlación alta es esperable; se reporta para "
-            "documentar la contribución de cada métrica."
+            "documentar la contribución de cada métrica. La complejidad cognitiva y el churn en líneas "
+            "no forman parte de la fórmula, por lo que su relación con el puntaje no es circular."
         ),
     }

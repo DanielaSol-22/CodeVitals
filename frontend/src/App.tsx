@@ -9,6 +9,7 @@ import { useRepo } from './state/RepoContext'
 const Inicio = lazy(() => import('./pages/Inicio'))
 const Modulos = lazy(() => import('./pages/Modulos'))
 const Analisis = lazy(() => import('./pages/Analisis'))
+const Validacion = lazy(() => import('./pages/Validacion'))
 const Reportes = lazy(() => import('./pages/Reportes'))
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
                   <Route path="/" element={<Inicio />} />
                   <Route path="/modulos" element={<Modulos />} />
                   <Route path="/analisis" element={<Analisis />} />
+                  <Route path="/validacion" element={<Validacion />} />
                   <Route path="/reportes" element={<Reportes />} />
                   <Route path="*" element={<Inicio />} />
                 </Routes>

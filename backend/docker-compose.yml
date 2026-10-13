@@ -5,10 +5,11 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: codevitals
-      POSTGRES_PASSWORD: codevitals
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-codevitals}
       POSTGRES_DB: codevitals
     ports:
-      - "5432:5432"
+      # Solo accesible desde este equipo (no expuesto a la red).
+      - "127.0.0.1:5432:5432"
     volumes:
       - codevitals_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -24,10 +25,16 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://codevitals:codevitals@db:5432/codevitals
-      DATABASE_URL_SYNC: postgresql+psycopg2://codevitals:codevitals@db:5432/codevitals
+      DATABASE_URL: postgresql+asyncpg://codevitals:${POSTGRES_PASSWORD:-codevitals}@db:5432/codevitals
+      DATABASE_URL_SYNC: postgresql+psycopg2://codevitals:${POSTGRES_PASSWORD:-codevitals}@db:5432/codevitals
+      # SonarQube (apoyo, opcional): vacío = desactivado. Ver SONARQUBE.md
+      # Seguridad (ver SEGURIDAD.md): API_KEY vacía = sin autenticación (solo desarrollo local).
+      API_KEY: ${API_KEY:-}
+      REPOS_ROOT: /code/repos
+      SONAR_URL: ${SONAR_URL:-}
+      SONAR_TOKEN: ${SONAR_TOKEN:-}
     ports:
-      - "8000:8000"
+      - "${API_BIND:-127.0.0.1}:8000:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -36,6 +43,57 @@ services:
       # Monta aquí la carpeta que contiene los repositorios Git a analizar:
       - ./repos:/code/repos
 
+  # ---------------------------------------------------------------------------
+  # SonarQube (herramienta de apoyo). No arranca por defecto: se activa con
+  #   docker compose --profile sonar up -d
+  # ---------------------------------------------------------------------------
+  sonar_db:
+    image: postgres:16-alpine
+    container_name: codevitals_sonar_db
+    profiles: ["sonar"]
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonar
+    volumes:
+      - sonar_pgdata:/var/lib/postgresql/data
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: codevitals_sonarqube
+    profiles: ["sonar"]
+    depends_on:
+      - sonar_db
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonar_db:5432/sonar
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+    ports:
+      - "127.0.0.1:9000:9000"
+    volumes:
+      - sonar_data:/opt/sonarqube/data
+      - sonar_extensions:/opt/sonarqube/extensions
+      - sonar_logs:/opt/sonarqube/logs
+
+  # Escáner: analiza un repositorio de ./repos y publica el resultado en SonarQube.
+  #   docker compose --profile sonar run --rm sonar-scanner \
+  #     -Dsonar.projectKey=loguru -Dsonar.projectBaseDir=/usr/src/loguru -Dsonar.sources=.
+  sonar-scanner:
+    image: sonarsource/sonar-scanner-cli:latest
+    container_name: codevitals_sonar_scanner
+    profiles: ["sonar"]
+    depends_on:
+      - sonarqube
+    environment:
+      SONAR_HOST_URL: http://sonarqube:9000
+      SONAR_TOKEN: ${SONAR_TOKEN:-}
+    volumes:
+      - ./repos:/usr/src
+
 volumes:
   codevitals_pgdata:
+  sonar_pgdata:
+  sonar_data:
+  sonar_extensions:
+  sonar_logs:
   

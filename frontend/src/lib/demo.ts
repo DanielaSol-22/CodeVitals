@@ -1,4 +1,4 @@
-import type { HistoryPoint, ModuleRow, RepoSummary, RiskLevel } from './types'
+import type { HistoryPoint, ModuleRow, Recommendation, RepoSummary, RiskLevel } from './types'
 
 type Seed = [string, RiskLevel, number, number, number, number, number, number]
 // ruta, nivel, puntaje, CC, churn, bus, deficiencias, líneas
@@ -35,11 +35,24 @@ function actionsFor(level: RiskLevel): string[] {
   return level === 'LOW' ? base.slice(2, 3) : level === 'MEDIUM' ? base.slice(0, 3) : base
 }
 
+const DEMO_RECS: Record<string, { justification: string; recommendations: Recommendation[] }> = {
+  'src/services/billing_engine.py': {
+    justification: 'Factores de riesgo detectados: complejidad ciclomática elevada (CC 88), código inestable (34 commits), tamaño de archivo excesivo (4521 líneas), concentración de conocimiento (61% de los commits de un solo autor).',
+    recommendations: [
+      { factor: 'complejidad', priority: 'ALTA', action: 'Dividir las funciones más complejas: calculate_invoice (31), apply_discounts (24), reconcile_payments (19). Extraer las condiciones anidadas a funciones auxiliares, reemplazar cadenas de if/elif por un diccionario de despacho y llevar cada función a una complejidad de 10 o menos.', reason: '9 de 42 funciones superan CC 10; complejidad total del archivo: 88.' },
+      { factor: 'tamaño', priority: 'ALTA', action: 'Dividir el archivo en unos 19 módulos, agrupando las funciones por responsabilidad (hoy 42 funciones en 4521 líneas), con el objetivo de que ninguno pase de 250 líneas.', reason: 'El archivo tiene 4521 líneas (se considera grande por encima de 250).' },
+      { factor: 'inestabilidad', priority: 'MEDIA', action: 'Escribir pruebas de regresión antes de volver a modificarlo y revisar sus últimos cambios para encontrar qué los provoca. Si los cambios son correcciones, buscar la causa raíz.', reason: '34 commits modificaron este archivo.' },
+      { factor: 'conocimiento', priority: 'MEDIA', action: 'Reducir la dependencia de una sola persona: pedir que otro integrante haga la revisión de código y el próximo cambio de este archivo, y documentar sus decisiones clave.', reason: '61% de los commits del archivo son de un solo autor (sobre 34 commits).' },
+    ],
+  },
+}
+
 function build(s: Seed): ModuleRow {
   const [path, level, score, cc, churn, bus, def, loc] = s
   const k = score / 100
   return {
     path, level, score, cc, churn, loc, busFactor: bus, deficiencies: def,
+    cognitive: Math.round(cc * 0.8), churnLines: churn * 45,
     scores: {
       complexity: Math.min(100, Math.round(cc * 0.9)),
       churn: Math.min(100, Math.round(churn * 2)),
@@ -48,6 +61,7 @@ function build(s: Seed): ModuleRow {
       busFactor: bus,
     },
     actions: actionsFor(level),
+    ...(DEMO_RECS[path] ?? {}),
     commits: [
       { hash: 'a3f2e4d', message: 'Fix: update billing logic', when: 'hace 2 días' },
       { hash: '7c9b8e1', message: 'Refactor: improve validation', when: 'hace 5 días' },

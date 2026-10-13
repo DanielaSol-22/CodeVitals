@@ -50,8 +50,21 @@ def test_analyze_modules_structure():
         mods.append(fake_module(cc, cc * 10, int(rng.integers(0, 30)), cls, score))
     out = sa.analyze_modules(mods)
     assert out["n_modules"] == 40
-    assert len(out["spearman"]) == 5 and len(out["chi_square"]) == 5
+    assert len(out["spearman"]) == 7 and len(out["chi_square"]) == 7
     cc_row = next(x for x in out["spearman"] if x["variable"] == "cyclomatic_complexity")
     assert cc_row["rho"] > 0.9
     bf = next(x for x in out["spearman"] if x["variable"] == "bus_factor")
     assert bf["rho"] is None  # constante
+
+
+def test_complementary_metrics_are_flagged_outside_the_formula():
+    mods = [fake_module(i, i * 10, i, "LOW", i * 1.2) for i in range(1, 20)]
+    for i, m in enumerate(mods):
+        m["code_metrics"]["cognitive_complexity"] = i * 2
+        m["git_metrics"]["code_churn"] = i * 30
+    out = sa.analyze_modules(mods)
+    flags = {x["variable"]: x["in_formula"] for x in out["spearman"]}
+    assert flags["cyclomatic_complexity"] and flags["code_churn"]
+    assert not flags["cognitive_complexity"] and not flags["churn_lines"]
+    cog = next(x for x in out["spearman"] if x["variable"] == "cognitive_complexity")
+    assert cog["rho"] == 1.0

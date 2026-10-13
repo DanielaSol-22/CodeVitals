@@ -132,7 +132,7 @@ export default function Modulos() {
             <thead className="bg-[#f7f8fc]">
               <tr>
                 <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-soft">Módulo</th>
-                {th('level', 'Riesgo')}{th('cc', 'CC')}{th('churn', 'Churn')}{th('busFactor', 'Bus')}{th('deficiencies', 'Deficiencias')}
+                {th('level', 'Riesgo')}{th('cc', 'CC')}{th('churn', 'Cambios')}{th('busFactor', 'Bus')}{th('deficiencies', 'Deficiencias')}
                 <th className="w-8"><span className="sr-only">Abrir</span></th>
               </tr>
             </thead>

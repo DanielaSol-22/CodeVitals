@@ -39,7 +39,7 @@ class GitAnalyzer:
         Retorna: commits totales, autores, cambios por archivo, etc.
         """
         try:
-            repo = Repository(self.repo_url, clone_repo_to=self.repo_path)
+            repo = Repository(self._ensure_cloned() if self.is_local() else self.repo_url, clone_repo_to=self.repo_path)
             
             commits = []
             authors = set()
@@ -99,7 +99,13 @@ class GitAnalyzer:
     _CLONE_LOCKS: Dict[str, threading.Lock] = {}
     _LOCKS_GUARD = threading.Lock()
 
+    def is_local(self) -> bool:
+        """Repositorio ya presente en disco ('local:<carpeta>'): nunca se descarga."""
+        return self.repo_url.startswith("local:")
+
     def _repo_name(self) -> str:
+        if self.is_local():
+            return self.repo_url[len("local:"):]
         return self.repo_url.rstrip("/").split("/")[-1].replace(".git", "")
 
     def _local_dir(self) -> str:
@@ -143,6 +149,12 @@ class GitAnalyzer:
             path = cls._RENAME_BRACES.sub(r"\1", path).replace("//", "/")
             return path
         return path.split(" => ", 1)[1]
+
+    def head_sha(self) -> str:
+        """Commit HEAD del clon local (clona si hace falta). Sirve para invalidar cachés."""
+        dest = self._ensure_cloned()
+        return subprocess.run(["git", "rev-parse", "HEAD"], cwd=dest, check=True,
+                              capture_output=True, text=True).stdout.strip()
 
     def _history(self) -> dict:
         """Devuelve (y cachea por commit HEAD) los agregados del historial."""

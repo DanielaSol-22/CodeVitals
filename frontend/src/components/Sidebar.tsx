@@ -33,7 +33,7 @@ export function RepoField({ compact = false }: { compact?: boolean }) {
         list="recent-repos"
         value={repoPath}
         onChange={(e) => setRepoPath(e.target.value)}
-        placeholder="https://github.com/usuario/repo"
+        placeholder="https://github.com/usuario/repo o local:carpeta"
         className="w-full rounded-lg border border-navy-line bg-navy-2 px-3 py-2.5 text-xs text-white placeholder:text-navy-mute"
       />
       <datalist id="recent-repos">{recent.map((r) => <option key={r} value={r} />)}</datalist>

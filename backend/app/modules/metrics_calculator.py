@@ -4,6 +4,8 @@ Extrae complejidad ciclomática, LOC, parámetros, etc.
 """
 import hashlib
 import lizard
+
+from app.modules.cognitive import cognitive_by_function
 import os
 from typing import Dict, List, Any
 
@@ -32,7 +34,8 @@ class MetricsCalculator:
         'cyclomatic_complexity_high': 10,
         'cyclomatic_complexity_critical': 15,
         'loc_long_method': 50,
-        'parameters_too_many': 5
+        'parameters_too_many': 5,
+        'cognitive_complexity_high': 15  # umbral por defecto de SonarSource
     }
 
     # Deteccion de duplicacion: bloques de N lineas normalizadas consecutivas.
@@ -83,21 +86,42 @@ class MetricsCalculator:
             functions = []
             total_complexity = 0
 
+            # Complejidad cognitiva (solo Python): se calcula con ast por funcion.
+            cognitive = None
+            if ext == '.py':
+                try:
+                    with open(file_path, 'r', encoding='utf-8', errors='replace') as fh:
+                        cognitive = cognitive_by_function(fh.read())
+                except OSError:
+                    cognitive = None
+            cognitive_total = None
+
             # Procesar funciones (Lizard usa function_list)
             for func in result.function_list:
                 complexity = func.cyclomatic_complexity
                 total_complexity += complexity
                 parameters_count = len(func.parameters) if hasattr(func, 'parameters') else 0
 
+                cog = None
+                if cognitive is not None:
+                    hit = cognitive.get(getattr(func, 'start_line', -1))
+                    if hit is None:  # respaldo: coincidencia por nombre simple
+                        simple = func.name.split('::')[-1].split('.')[-1]
+                        hit = next((v for v in cognitive.values() if v[0] == simple), None)
+                    if hit is not None:
+                        cog = hit[1]
+                        cognitive_total = (cognitive_total or 0) + cog
+
                 functions.append({
                     'name': func.name,
                     'cyclomatic_complexity': complexity,
+                    'cognitive_complexity': cog,
                     'lines': func.nloc,
                     'parameters': parameters_count
                 })
 
             # Calcular deficiencias (lista de dicts: type/function/severity/value)
-            deficiencies = self._detect_deficiencies(result.function_list)
+            deficiencies = self._detect_deficiencies(result.function_list, {f['name']: f['cognitive_complexity'] for f in functions})
 
             # Duplicacion dentro del propio archivo (fallback cuando se analiza
             # un solo archivo sin contexto del resto del repositorio).
@@ -109,6 +133,7 @@ class MetricsCalculator:
                 'loc': result.nloc,
                 'functions_count': len(result.function_list),
                 'complexity': total_complexity,
+                'cognitive_complexity': cognitive_total,
                 'average_complexity': round(result.average_cyclomatic_complexity, 2) if result.function_list else 0,
                 'functions': functions,
                 'deficiencies': deficiencies,
@@ -211,7 +236,7 @@ class MetricsCalculator:
 
         return result
 
-    def _detect_deficiencies(self, function_list) -> List[Dict[str, Any]]:
+    def _detect_deficiencies(self, function_list, cognitive_by_name=None) -> List[Dict[str, Any]]:
         """
         Detecta deficiencias en el código basado en umbrales
         """
@@ -236,6 +261,16 @@ class MetricsCalculator:
                     'function': func.name,
                     'severity': 'HIGH',
                     'value': cc
+                })
+
+            # Dificil de entender (complejidad cognitiva)
+            cog = (cognitive_by_name or {}).get(func.name)
+            if cog is not None and cog > self.THRESHOLDS['cognitive_complexity_high']:
+                deficiencies.append({
+                    'type': 'HIGH_COGNITIVE_COMPLEXITY',
+                    'function': func.name,
+                    'severity': 'HIGH',
+                    'value': cog
                 })
 
             # Método muy largo
