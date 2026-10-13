@@ -37,6 +37,19 @@ export const apiClient = {
     const { data } = await http.post('/api/v1/stats/validation/multi', { repo_urls: repoUrls, alpha }, { timeout: 30 * 60 * 1000 })
     return data
   },
+  /** SonarQube (apoyo, opcional). */
+  async sonarStatus(): Promise<any> {
+    const { data } = await http.get('/api/v1/sonar/status', { timeout: 8000 })
+    return data
+  },
+  async sonarFiles(projectKey: string): Promise<any> {
+    const { data } = await http.get('/api/v1/sonar/measures', { params: { project_key: projectKey }, timeout: 60000 })
+    return data
+  },
+  async sonarCompare(repoUrl: string, projectKey: string): Promise<any> {
+    const { data } = await http.post('/api/v1/sonar/compare', { repo_url: repoUrl, project_key: projectKey }, { timeout: 30 * 60 * 1000 })
+    return data
+  },
 }
 
 export function errorMessage(e: unknown): string {

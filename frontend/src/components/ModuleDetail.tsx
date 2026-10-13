@@ -2,6 +2,7 @@ import { useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from './Icon'
 import { RiskPill } from './RiskPill'
+import { SonarSection } from './SonarSection'
 import type { ModuleRow, RecPriority } from '../lib/types'
 
 const PRIORITY_STYLE: Record<RecPriority, string> = {
@@ -92,6 +93,8 @@ export function ModuleDetail({ module: m, onClose }: { module: ModuleRow; onClos
             )}
           </section>
         </div>
+
+        <SonarSection module={m} />
 
         {m.commits.length > 0 && (
           <section className="mt-4 rounded-lg border border-line p-4">

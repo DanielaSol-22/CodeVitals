@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { PageHeader } from '../components/PageHeader'
 import { KpiCard } from '../components/KPICard'
 import { Icon } from '../components/Icon'
+import { SonarCard } from '../components/SonarCard'
 import { useToast } from '../components/Toast'
 import { useRepo } from '../state/RepoContext'
 import { apiClient, errorMessage } from '../lib/api'
@@ -270,6 +271,8 @@ export default function Validacion() {
           <p className="text-[11px] text-muted">{result.saved ? 'Resultados guardados en la base de datos.' : 'Los resultados no se pudieron guardar en la base de datos.'}</p>
         </>
       )}
+
+      <SonarCard repoUrls={urls} />
     </>
   )
 }

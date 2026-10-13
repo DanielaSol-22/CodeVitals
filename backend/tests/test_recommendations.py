@@ -55,6 +55,6 @@ def test_justification_has_values_and_no_constant_suffix():
 
 
 def test_medium_without_specific_trigger_gets_generic_recommendation():
-    m = _module([_f(f"f{i}", 4) for i in range(6)], 240, 15, 10, 50)
+    m = _module([_f(f"f{i}", 4) for i in range(6)], 240, 6, 10, 50)
     assert m["risk_analysis"]["classification"] in ("MEDIUM", "LOW")
     assert m["recommendations"]

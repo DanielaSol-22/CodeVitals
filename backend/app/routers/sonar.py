@@ -23,6 +23,7 @@ COMPARISONS = [
     ("Complejidad ciclomática", "cyclomatic_complexity", "complexity"),
     ("Líneas de código", "lines_of_code", "ncloc"),
     ("Duplicación", "duplication_percent", "duplicated_lines_density"),
+    ("Complejidad cognitiva", "cognitive_complexity", "cognitive_complexity"),
 ]
 
 

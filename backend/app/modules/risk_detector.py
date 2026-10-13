@@ -5,6 +5,10 @@ Implementa la fórmula ponderada de riesgo para análisis de mantenibilidad
 from typing import Dict, List, Any, Tuple
 
 
+# Commits a partir de los cuales el componente de frecuencia llega a 100 (tope de normalización).
+CHURN_MAX_COMMITS = 20
+
+
 class RiskDetector:
     """
     Calcula el riesgo de mantenibilidad usando fórmula ponderada
@@ -57,7 +61,7 @@ class RiskDetector:
 
         return score, assessment
 
-    def calculate_churn_score(self, commits: int, max_commits: int = 100) -> Tuple[float, str]:
+    def calculate_churn_score(self, commits: int, max_commits: int = CHURN_MAX_COMMITS) -> Tuple[float, str]:
         """Calcula score de Code Churn"""
         score = self.normalize_metric(commits, 0, max_commits)
 

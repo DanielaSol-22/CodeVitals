@@ -9,7 +9,7 @@ services:
       POSTGRES_DB: codevitals
     ports:
       # Solo accesible desde este equipo (no expuesto a la red).
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${DB_PORT:-5433}:5432"
     volumes:
       - codevitals_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -42,6 +42,15 @@ services:
       - ./app:/code/app
       # Monta aquí la carpeta que contiene los repositorios Git a analizar:
       - ./repos:/code/repos
+
+  frontend:
+    build: ../frontend
+    container_name: codevitals_frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      - api
 
   # ---------------------------------------------------------------------------
   # SonarQube (herramienta de apoyo). No arranca por defecto: se activa con
@@ -77,7 +86,7 @@ services:
 
   # Escáner: analiza un repositorio de ./repos y publica el resultado en SonarQube.
   #   docker compose --profile sonar run --rm sonar-scanner \
-  #     -Dsonar.projectKey=loguru -Dsonar.projectBaseDir=/usr/src/loguru -Dsonar.sources=.
+  #     "-Dsonar.projectKey=loguru" "-Dsonar.projectBaseDir=/usr/src/loguru" "-Dsonar.sources=."
   sonar-scanner:
     image: sonarsource/sonar-scanner-cli:latest
     container_name: codevitals_sonar_scanner
