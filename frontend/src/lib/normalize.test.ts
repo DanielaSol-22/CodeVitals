@@ -78,3 +78,11 @@ describe('métricas alineadas con la investigación', () => {
     expect(normalizeModule({ file_path: 'a.js', risk_score: 10, cognitive_complexity: null }).cognitive).toBeNull()
   })
 })
+
+import { mainFactor } from './risk'
+describe('mainFactor', () => {
+  it('devuelve el componente con mayor aporte ponderado', () => {
+    expect(mainFactor({ complexity: 40, churn: 100, loc: 0, duplication: 0, busFactor: 0 })).toBe('churn')
+    expect(mainFactor({ complexity: 0, churn: 0, loc: 0, duplication: 0, busFactor: 0 })).toBeNull()
+  })
+})

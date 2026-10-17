@@ -22,10 +22,10 @@ CodeVitals analiza repositorios Git, calcula métricas de código e historial, l
 **Fórmula de riesgo**
 
 ```
-Riesgo = 0.375·CC + 0.275·Frecuencia + 0.175·LOC + 0.125·Duplicación + 0.125·Factor de bus
+Riesgo = (0.375·CC + 0.275·Frecuencia + 0.175·LOC + 0.125·Duplicación + 0.125·Factor de bus) / 1.075
 ```
 
-- Cada componente se normaliza a 0–100. CC es por tramos (≤5, ≤10, ≤15, >15); la frecuencia llega a 100 con 20 commits (`CHURN_MAX_COMMITS` en `risk_detector.py`) y LOC con 500 líneas.
+- Los pesos suman 1.075, por lo que el puntaje se divide entre esa suma para que el máximo sea 100. Cada componente se normaliza a 0–100. CC es por tramos (≤5, ≤10, ≤15, >15); la frecuencia llega a 100 con 20 commits (`CHURN_MAX_COMMITS` en `risk_detector.py`) y LOC con 500 líneas.
 - **Clasificación:** BAJO < 40 · MEDIO < 70 · ALTO ≥ 70.
 - Validación estadística: correlación de **Spearman** y prueba **chi-cuadrado** (V de Cramér) de cada métrica contra el puntaje.
 - **SonarQube** es una herramienta de apoyo opcional: contrasta las métricas propias, pero no altera el puntaje.

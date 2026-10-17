@@ -7,9 +7,9 @@ const cell = (v: number | null) => (v == null ? '—' : v.toLocaleString('es-GT'
 
 /** Indicadores de SonarQube para un archivo. No se muestra nada si SonarQube no está disponible. */
 export function SonarSection({ module: m }: { module: ModuleRow }) {
-  const { repoPath, isDemo } = useRepo()
+  const { repoPath, isEmpty } = useRepo()
   const status = useSonarStatus()
-  const online = !isDemo && !!status.data?.configured && !!status.data?.reachable
+  const online = !isEmpty && !!status.data?.configured && !!status.data?.reachable
   const files = useSonarFiles(repoPath, online)
 
   if (!online || files.isLoading) return null
@@ -18,8 +18,8 @@ export function SonarSection({ module: m }: { module: ModuleRow }) {
 
   if (!file) {
     return (
-      <section className="mt-4 rounded-lg border border-line p-4">
-        <h3 className="mb-1 text-[13px] font-bold">SonarQube</h3>
+      <section className="mt-4 rounded-xl border border-line p-4">
+        <h3 className="mb-1 text-sm font-semibold">SonarQube</h3>
         <p className="text-xs text-muted">
           Sin datos de SonarQube para este archivo. Escanea el proyecto «{key}» (ver SONARQUBE.md) y vuelve a abrir el detalle.
         </p>
@@ -39,11 +39,11 @@ export function SonarSection({ module: m }: { module: ModuleRow }) {
   ]
 
   return (
-    <section className="mt-4 rounded-lg border border-line p-4">
-      <h3 className="mb-1 text-[13px] font-bold">SonarQube <span className="font-normal text-muted">(contraste, no afecta el puntaje)</span></h3>
+    <section className="mt-4 rounded-xl border border-line p-4">
+      <h3 className="mb-1 text-sm font-semibold">SonarQube <span className="font-normal text-muted">(contraste, no afecta el puntaje)</span></h3>
       <dl>
         {rows.map(([k, v]) => (
-          <div key={k} className="flex justify-between gap-4 border-t border-[#f0f2f8] py-2 text-xs"><dt className="text-soft">{k}</dt><dd className="text-right font-semibold tabular-nums">{v}</dd></div>
+          <div key={k} className="flex justify-between gap-4 border-t border-line py-2 text-xs"><dt className="text-soft">{k}</dt><dd className="text-right font-semibold tabular-nums">{v}</dd></div>
         ))}
       </dl>
     </section>

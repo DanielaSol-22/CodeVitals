@@ -61,6 +61,13 @@ async def _persist(db: AsyncSession, repo_url: str, result: dict) -> None:
             repo_url=repo_url, nombre=nombre, prueba="chi_square", variable=item["variable"],
             estadistico=item["chi2"], valor_p=item["p_value"], n=item["n"],
             significativo=item["significant"], interpretacion=item["interpretation"]))
+    ext = result.get("external_validity") or {}
+    ext_items = ([("risk_score", ext["score"])] if ext.get("score") else []) + [(i["variable"], i) for i in ext.get("by_metric", [])]
+    for variable, item in ext_items:
+        rows.append(models.ResultadoEstadistico(
+            repo_url=repo_url, nombre=nombre, prueba="spearman_externo", variable=variable,
+            estadistico=item["rho"], valor_p=item["p_value"], n=item["n"],
+            significativo=item["significant"], interpretacion=item["interpretation"]))
     db.add_all(rows)
     await db.commit()
 

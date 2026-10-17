@@ -115,6 +115,7 @@ def _git_metrics_for_file(git: GitAnalyzer, file_path: str, bus_factor_risk: flo
     return {
         "total_commits": commits,
         "total_churn": churn.get("total_churn", 0) if ok else 0,
+        "fix_commits": churn.get("fix_commits", 0) if ok else 0,
         "lines_added": churn.get("additions", 0) if ok else 0,
         "lines_deleted": churn.get("deletions", 0) if ok else 0,
         "risk_percentage": file_risk,

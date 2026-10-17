@@ -41,7 +41,7 @@ def api_info():
             "system": ["GET /health", "GET /api/v1/info"],
         },
         "risk_formula": (
-            "Risk = 0.375*CC + 0.275*Churn + 0.175*LOC + 0.125*Dup + 0.125*BusFactor "
+            "Risk = (0.375*CC + 0.275*Churn + 0.175*LOC + 0.125*Dup + 0.125*BusFactor) / 1.075 "
             "(escala 0-100, clasificación LOW/MEDIUM/HIGH)"
         ),
         "docs": "/docs",

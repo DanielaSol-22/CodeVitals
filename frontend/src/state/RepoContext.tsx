@@ -3,7 +3,6 @@ import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-quer
 import type { ModuleRow, RepoSummary } from '../lib/types'
 import { apiClient, errorMessage } from '../lib/api'
 import { normalizePriority, normalizeRepo } from '../lib/normalize'
-import { DEMO_MODULES, DEMO_SUMMARY } from '../lib/demo'
 
 type Status = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -12,16 +11,16 @@ interface RepoState {
   setRepoPath: (p: string) => void
   summary: RepoSummary
   modules: ModuleRow[]
-  isDemo: boolean
+  /** true mientras no hay un repositorio analizado. */
+  isEmpty: boolean
   status: Status
   error: string | null
   apiOnline: boolean | null
   recent: string[]
   analyze: (path?: string) => Promise<void>
-  loadDemo: () => void
 }
 
-interface RepoData {
+export interface RepoData {
   summary: RepoSummary
   modules: ModuleRow[]
 }
@@ -63,9 +62,16 @@ async function fetchRepo(path: string): Promise<RepoData> {
   return { summary, modules }
 }
 
-export function RepoProvider({ children }: { children: ReactNode }) {
+const EMPTY_SUMMARY: RepoSummary = {
+  name: 'Sin repositorio', avgScore: 0, totalModules: 0, totalDeficiencies: 0, highCount: 0,
+  counts: { low: 0, medium: 0, high: 0 }, pct: { low: 0, medium: 0, high: 0 },
+  componentAvg: { complexity: 0, churn: 0, loc: 0, duplication: 0, busFactor: 0 },
+  busFactorAvg: 0, updatedAt: '', commits: null, trends: {},
+}
+
+export function RepoProvider({ children, initialData }: { children: ReactNode; initialData?: RepoData }) {
   const qc = useQueryClient()
-  const [repoPath, setRepoPath] = useState(() => readRecent()[0] ?? '')
+  const [repoPath, setRepoPath] = useState('')
   const [activePath, setActivePath] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
   const [recent, setRecent] = useState<string[]>(readRecent)
@@ -99,6 +105,7 @@ export function RepoProvider({ children }: { children: ReactNode }) {
     async (path?: string) => {
       const target = (path ?? repoPath).trim()
       if (!target) {
+        setActivePath(null) // sin repositorio no se muestran resultados de uno anterior
         setFormError('Escribe la URL de un repositorio para analizarlo.')
         return
       }
@@ -110,12 +117,7 @@ export function RepoProvider({ children }: { children: ReactNode }) {
     [repoPath, activePath, qc],
   )
 
-  const loadDemo = useCallback(() => {
-    setActivePath(null)
-    setFormError(null)
-  }, [])
-
-  const data = activePath !== null ? repo.data : undefined
+  const data = activePath !== null ? repo.data : initialData
   const status: Status = formError || (activePath !== null && repo.isError)
     ? 'error'
     : activePath !== null && repo.isFetching
@@ -128,17 +130,16 @@ export function RepoProvider({ children }: { children: ReactNode }) {
     () => ({
       repoPath,
       setRepoPath,
-      summary: data?.summary ?? DEMO_SUMMARY,
-      modules: data?.modules ?? DEMO_MODULES,
-      isDemo: data === undefined,
+      summary: data?.summary ?? EMPTY_SUMMARY,
+      modules: data?.modules ?? [],
+      isEmpty: data === undefined,
       status,
       error: formError ?? (repo.isError ? errorMessage(repo.error) : null),
       apiOnline: health.data ?? (health.isError ? false : null),
       recent,
       analyze,
-      loadDemo,
     }),
-    [repoPath, data, status, formError, repo.isError, repo.error, health.data, health.isError, recent, analyze, loadDemo],
+    [repoPath, data, status, formError, repo.isError, repo.error, health.data, health.isError, recent, analyze],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

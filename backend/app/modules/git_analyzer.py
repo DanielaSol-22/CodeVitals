@@ -12,6 +12,62 @@ from collections import defaultdict
 from typing import Dict, List, Any, Optional
 
 
+# Commits de corrección de errores (criterio externo de validación). Heurística por palabras clave
+# del asunto del commit (Mockus y Votta, 2000): fix, bug, defect, crash, regression, "resolves #N".
+_FIX_RE = re.compile(
+    r"\b(fix(?:e[sd]|ing)?|bug(?:s|fix(?:es)?)?|hotfix|defect|crash(?:es|ed)?|regression|resolve[sd]? #\d+)\b",
+    re.IGNORECASE,
+)
+# "Fix typo" o "fix docs" corrigen texto, no defectos de comportamiento.
+_NOT_DEFECT_RE = re.compile(
+    r"\b(typos?|spelling|docs?|documentation|readme|changelog|lint(?:ing)?|format(?:ting)?|whitespace|comments?|ci)\b",
+    re.IGNORECASE,
+)
+
+
+def is_fix_commit(subject: str) -> bool:
+    """True si el asunto del commit indica la corrección de un defecto."""
+    subject = subject or ""
+    return bool(_FIX_RE.search(subject)) and not _NOT_DEFECT_RE.search(subject)
+
+
+def resolve_identities(pairs: List[tuple]) -> Dict[tuple, str]:
+    """Unifica a una misma persona que aparece con varios nombres o correos.
+
+    `pairs` son (nombre, correo) de cada commit. Dos pares son la misma persona si comparten
+    correo o comparten nombre (ignorando mayúsculas). Se usa unión de conjuntos, así que la
+    relación es transitiva: "Ana" <a@x>, "Ana Pérez" <a@x> y "Ana" <ana@y> quedan como una.
+    Los correos genéricos (noreply@github.com, vacíos) no unen a nadie.
+    Devuelve {(nombre, correo): nombre_mostrado}, con el nombre más frecuente de cada persona."""
+    parent: Dict[str, str] = {}
+
+    def find(x: str) -> str:
+        parent.setdefault(x, x)
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a: str, b: str) -> None:
+        parent[find(a)] = find(b)
+
+    generic = {"", "noreply@github.com", "no-reply@github.com", "unknown@unknown"}
+    counts: Dict[tuple, int] = defaultdict(int)
+    for name, email in pairs:
+        counts[(name, email)] += 1
+        node = "n:" + name.strip().lower()
+        find(node)
+        mail = email.strip().lower()
+        if mail not in generic:
+            union(node, "e:" + mail)
+
+    names_by_root: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    for (name, email), c in counts.items():
+        names_by_root[find("n:" + name.strip().lower())][name] += c
+    display = {root: max(ns, key=ns.get) for root, ns in names_by_root.items()}
+    return {(name, email): display[find("n:" + name.strip().lower())] for (name, email) in counts}
+
+
 class GitAnalyzer:
     """Analiza repositorios Git para extraer métricas históricas"""
     
@@ -172,10 +228,17 @@ class GitAnalyzer:
 
         out = subprocess.run(
             ["git", "-c", "core.quotepath=false", "log", "--numstat", "-M",
-             "--format=@@%x1f%an", "HEAD"],
+             "--format=@@%x1f%an%x1f%ae%x1f%s", "HEAD"],
             cwd=dest, check=True, capture_output=True, text=True,
             encoding="utf-8", errors="replace",
         ).stdout
+
+        # Una misma persona puede firmar con varios nombres o correos: se unifica antes de contar.
+        ids_out = subprocess.run(
+            ["git", "log", "--format=%an%x1f%ae", "HEAD"], cwd=dest, check=True,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+        ).stdout
+        identity = resolve_identities([tuple(l.split("\x1f", 1)) for l in ids_out.splitlines() if "\x1f" in l])
 
         author_commits: Dict[str, int] = defaultdict(int)
         author_files: Dict[str, set] = defaultdict(set)
@@ -184,16 +247,22 @@ class GitAnalyzer:
         file_authors_path: Dict[str, Dict[str, int]] = {}
         file_authors_name: Dict[str, Dict[str, int]] = {}
         author: Optional[str] = None
+        is_fix = False
 
         def _acc(index, k, added, deleted):
-            e = index.setdefault(k, {"commits": 0, "added": 0, "deleted": 0})
+            e = index.setdefault(k, {"commits": 0, "added": 0, "deleted": 0, "fixes": 0})
             e["commits"] += 1
             e["added"] += added
             e["deleted"] += deleted
+            if is_fix:
+                e["fixes"] += 1
 
         for line in out.splitlines():
             if line.startswith("@@\x1f"):
-                author = line[3:]
+                name, _, rest = line[3:].partition("\x1f")
+                email, _, subject = rest.partition("\x1f")
+                author = identity.get((name, email), name)
+                is_fix = is_fix_commit(subject)
                 author_commits[author] += 1
                 continue
             if not line.strip() or author is None:
@@ -231,11 +300,12 @@ class GitAnalyzer:
             key = file_path.replace("\\", "/")
             e = h["by_path"].get(key) or h["by_name"].get(key) \
                 or h["by_name"].get(os.path.basename(key)) \
-                or {"commits": 0, "added": 0, "deleted": 0}
+                or {"commits": 0, "added": 0, "deleted": 0, "fixes": 0}
 
             return {
                 'file': file_path,
                 'total_changes': e["commits"],
+                'fix_commits': e.get("fixes", 0),
                 'additions': e["added"],
                 'deletions': e["deleted"],
                 'total_churn': e["added"] + e["deleted"]

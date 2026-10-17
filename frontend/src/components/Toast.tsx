@@ -36,7 +36,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div aria-live="polite" className="pointer-events-none fixed bottom-20 right-4 z-40 flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2 lg:bottom-6">
         {items.map((t) => (
-          <div key={t.id} role={t.kind === 'error' ? 'alert' : 'status'} className={`pointer-events-auto flex items-start gap-3 rounded-lg border px-4 py-3 text-xs shadow-lg animate-[toast-in_.25s_ease-out] ${t.kind === 'error' ? 'border-risk-high/30 bg-risk-high-bg text-risk-high-fg' : 'border-risk-low/30 bg-risk-low-bg text-risk-low-fg'}`}>
+          <div key={t.id} role={t.kind === 'error' ? 'alert' : 'status'} className={`pointer-events-auto flex items-start gap-3 rounded-lg border px-4 py-3 text-[13px] shadow-pop animate-[toast-in_.25s_ease-out] ${t.kind === 'error' ? 'border-risk-high-bar bg-risk-high-bg text-risk-high-fg' : 'border-risk-low-bar bg-risk-low-bg text-risk-low-fg'}`}>
             <Icon name={t.kind === 'error' ? 'warn' : 'check'} size={16} strokeWidth={2.2} className="mt-px shrink-0" />
             <span className="min-w-0 flex-1 break-words">{t.text}</span>
             <button aria-label="Cerrar aviso" onClick={() => dismiss(t.id)} className="-m-2 flex h-9 w-9 shrink-0 items-center justify-center"><Icon name="close" size={13} strokeWidth={2.2} /></button>

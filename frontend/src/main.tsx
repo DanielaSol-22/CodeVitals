@@ -6,6 +6,9 @@ import App from './App'
 import { RepoProvider } from './state/RepoContext'
 import { ToastProvider } from './components/Toast'
 import './index.css'
+import { applyTheme, readTheme } from './lib/theme'
+
+applyTheme(readTheme())
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false } } })
 

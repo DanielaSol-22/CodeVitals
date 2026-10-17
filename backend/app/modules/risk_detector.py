@@ -16,7 +16,7 @@ class RiskDetector:
     Fórmula: Risk = 0.375·CC + 0.275·Churn + 0.175·LOC + 0.125·Dup + 0.125·BusF
     """
 
-    # Pesos de la fórmula (suman 1.0)
+    # Pesos de la fórmula (suman 1.075; el puntaje se divide entre esa suma para quedar en 0-100)
     WEIGHTS = {
         'cyclomatic_complexity': 0.375,
         'code_churn': 0.275,
@@ -145,7 +145,7 @@ class RiskDetector:
             (loc_score * self.WEIGHTS['lines_of_code']) +
             (dup_score * self.WEIGHTS['code_duplication']) +
             (bf_score * self.WEIGHTS['bus_factor'])
-        )
+        ) / self.total_weight  # normaliza: los pesos suman 1.075, así el máximo real es 100
 
         # Clasificar riesgo
         classification = self._classify_risk(risk_score)
@@ -504,6 +504,7 @@ class RiskDetector:
                 'code_churn': churn,                   # lineas agregadas + eliminadas
                 'lines_added': git_metrics.get('lines_added', 0),
                 'lines_deleted': git_metrics.get('lines_deleted', 0),
+                'fix_commits': git_metrics.get('fix_commits', 0),  # commits de corrección (criterio externo)
                 'bus_factor_risk': bus_factor,
                 'top_author': git_metrics.get('top_author')
             },

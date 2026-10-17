@@ -51,3 +51,41 @@ describe('isRepoRef', () => {
     expect(isRepoRef('/etc/passwd')).toBe(false)
   })
 })
+
+describe('validez externa', () => {
+  it('normaliza la respuesta y tolera su ausencia', async () => {
+    const { normalizeValidation } = await import('./validation')
+    expect(normalizeValidation({}).external).toBeNull()
+    const v = normalizeValidation({
+      external_validity: {
+        criterion: 'c', min_commits: 5, n_total: 30, n_eligible: 20, n_with_fixes: 9, sufficient: true,
+        score: { variable: 'x', n: 20, rho: 0.42, p_value: 0.01, significant: true, interpretation: 'ok' },
+        by_metric: [{ variable: 'cyclomatic_complexity', label: 'CC', in_formula: true, n: 20, rho: 0.3, p_value: 0.2, significant: false, interpretation: '' }],
+        by_class: [{ classification: 'HIGH', n: 4, mean_ratio: 0.5, median_ratio: 0.4 }],
+        kruskal: { h: 6.1, p_value: 0.04, significant: true }, note: 'n',
+      },
+    })
+    expect(v.external?.nEligible).toBe(20)
+    expect(v.external?.score?.label).toBe('Puntaje de riesgo')
+    expect(v.external?.byClass[0].meanRatio).toBe(0.5)
+    expect(v.external?.kruskal?.significant).toBe(true)
+  })
+})
+
+describe('sensibilidad de pesos', () => {
+  it('normaliza y tolera su ausencia', async () => {
+    const { normalizeValidation } = await import('./validation')
+    expect(normalizeValidation({}).sensitivity).toBeNull()
+    const v = normalizeValidation({
+      weight_sensitivity: {
+        delta: 0.2, n_modules: 100, sufficient: true,
+        scenarios: [{ weight: 'cyclomatic_complexity', label: 'CC', base_weight: 0.375, direction: 'sube', pct_changed: 3.5, rho: 0.998, mean_abs_diff: 1, max_abs_diff: 4 }],
+        monte_carlo: { runs: 1000, median_pct_changed: 4, p95_pct_changed: 7, worst_pct_changed: 9, min_rho: 0.99 },
+        most_sensitive: { label: 'CC', direction: 'sube', pct_changed: 3.5 },
+      },
+    })
+    expect(v.sensitivity?.scenarios[0].pctChanged).toBe(3.5)
+    expect(v.sensitivity?.monteCarlo?.p95PctChanged).toBe(7)
+    expect(v.sensitivity?.mostSensitive?.label).toBe('CC')
+  })
+})

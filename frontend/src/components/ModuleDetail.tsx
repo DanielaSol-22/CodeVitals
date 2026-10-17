@@ -6,9 +6,9 @@ import { SonarSection } from './SonarSection'
 import type { ModuleRow, RecPriority } from '../lib/types'
 
 const PRIORITY_STYLE: Record<RecPriority, string> = {
-  ALTA: 'bg-[#fde8e8] text-[#b42318]',
-  MEDIA: 'bg-[#fff1d6] text-[#9a5b00]',
-  BAJA: 'bg-[#e3f4ea] text-[#17703f]',
+  ALTA: 'bg-risk-high-bg text-risk-high-fg',
+  MEDIA: 'bg-risk-med-bg text-risk-med-fg',
+  BAJA: 'bg-risk-low-bg text-risk-low-fg',
 }
 
 const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -51,26 +51,26 @@ export function ModuleDetail({ module: m, onClose }: { module: ModuleRow; onClos
   ]
 
   return createPortal(
-    <div className="fixed inset-0 z-30 flex items-end justify-center bg-ink/40 p-0 sm:items-center sm:p-6" onClick={onClose}>
-      <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()} className="max-h-full w-full max-w-[760px] animate-[sheet-in_.22s_ease-out] overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-xl">
+    <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/55 p-0 sm:items-center sm:p-6" onClick={onClose}>
+      <div ref={dialog} role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()} className="max-h-full w-full max-w-[760px] animate-[sheet-in_.22s_ease-out] overflow-y-auto rounded-t-2xl border border-line bg-surface p-5 shadow-pop sm:rounded-2xl">
         <div className="flex items-center gap-3">
-          <button aria-label="Volver" onClick={onClose} className="-ml-2 flex h-11 w-11 items-center justify-center text-brand"><Icon name="arrowL" size={18} strokeWidth={2.2} /></button>
+          <button aria-label="Volver" onClick={onClose} className="-ml-2 flex h-11 w-11 items-center justify-center rounded-lg text-brand hover:bg-canvas"><Icon name="arrowL" size={18} strokeWidth={2.2} /></button>
           <Icon name="file" size={16} className="shrink-0 text-muted" />
-          <h2 id={titleId} className="min-w-0 flex-1 truncate text-sm font-bold">{m.path}</h2>
+          <h2 id={titleId} className="min-w-0 flex-1 truncate font-mono text-sm font-semibold">{m.path}</h2>
           <RiskPill level={m.level} size="md" />
-          <button ref={closeBtn} aria-label="Cerrar" onClick={onClose} className="-mr-2 flex h-11 w-11 items-center justify-center text-soft"><Icon name="close" size={16} strokeWidth={2.2} /></button>
+          <button ref={closeBtn} aria-label="Cerrar" onClick={onClose} className="-mr-2 flex h-11 w-11 items-center justify-center rounded-lg text-soft hover:bg-canvas"><Icon name="close" size={16} strokeWidth={2.2} /></button>
         </div>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-[0.8fr_1.4fr]">
-          <section className="rounded-lg border border-line p-4">
+          <section className="rounded-xl border border-line p-4">
             <h3 className="mb-2 text-[13px] font-bold">Resumen</h3>
             <dl>
               {summary.map(([k, v]) => (
-                <div key={k} className="flex justify-between border-t border-[#f0f2f8] py-2 text-xs"><dt className="text-soft">{k}</dt><dd className="font-semibold tabular-nums">{v}</dd></div>
+                <div key={k} className="flex justify-between border-t border-line py-2 text-xs"><dt className="text-soft">{k}</dt><dd className="font-semibold tabular-nums">{v}</dd></div>
               ))}
             </dl>
           </section>
-          <section className="min-w-0 rounded-lg border border-line p-4">
+          <section className="min-w-0 rounded-xl border border-line p-4">
             <h3 className="mb-2 text-[13px] font-bold">Recomendaciones</h3>
             {m.justification && <p className="mb-3 rounded-md bg-canvas px-3 py-2 text-xs leading-relaxed text-soft">{m.justification}</p>}
             {m.recommendations && m.recommendations.length > 0 ? (
@@ -78,11 +78,11 @@ export function ModuleDetail({ module: m, onClose }: { module: ModuleRow; onClos
                 {m.recommendations.map((r) => (
                   <li key={r.factor + r.action} className="text-xs leading-relaxed">
                     <div className="mb-1 flex items-center gap-2">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${PRIORITY_STYLE[r.priority]}`}>{r.priority}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${PRIORITY_STYLE[r.priority]}`}>{r.priority}</span>
                       <span className="font-semibold capitalize text-ink">{r.factor}</span>
                     </div>
                     <p className="text-ink">{r.action}</p>
-                    {r.reason && <p className="mt-1 text-[11px] text-muted">Por qué: {r.reason}</p>}
+                    {r.reason && <p className="mt-1 text-xs text-muted">Por qué: {r.reason}</p>}
                   </li>
                 ))}
               </ol>
@@ -97,14 +97,14 @@ export function ModuleDetail({ module: m, onClose }: { module: ModuleRow; onClos
         <SonarSection module={m} />
 
         {m.commits.length > 0 && (
-          <section className="mt-4 rounded-lg border border-line p-4">
+          <section className="mt-4 rounded-xl border border-line p-4">
             <h3 className="mb-1 text-[13px] font-bold">Historial de cambios</h3>
             <ul>
               {m.commits.map((c) => (
-                <li key={c.hash + c.message} className="flex items-center gap-3 border-t border-[#f0f2f8] py-2.5 text-xs">
-                  <code className="rounded bg-[#f0f2f8] px-1.5 py-0.5 text-[11px]">{c.hash}</code>
+                <li key={c.hash + c.message} className="flex items-center gap-3 border-t border-line py-2.5 text-xs">
+                  <code className="rounded bg-canvas px-1.5 py-0.5 text-xs">{c.hash}</code>
                   <span className="min-w-0 flex-1 truncate">{c.message}</span>
-                  <span className="text-[11px] text-muted">{c.when}</span>
+                  <span className="text-xs text-muted">{c.when}</span>
                 </li>
               ))}
             </ul>

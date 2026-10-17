@@ -32,6 +32,15 @@ describe('Módulos', () => {
     expect(screen.getByText(/de 6/)).toBeInTheDocument()
   })
 
+  it('filtra con los chips de nivel y muestra los conteos', async () => {
+    renderWithProviders(<Modulos />)
+    expect(screen.getByRole('button', { name: /todos \(38\)/i })).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(screen.getByRole('button', { name: /alto \(6\)/i }))
+    expect(screen.getByText(/de 6/)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /limpiar filtros/i }))
+    expect(screen.getByText(/de 38/)).toBeInTheDocument()
+  })
+
   it('abre el detalle con foco en Cerrar y lo cierra con Escape', async () => {
     renderWithProviders(<Modulos />)
     await userEvent.click(screen.getAllByRole('button', { name: /billing_engine/ })[0])

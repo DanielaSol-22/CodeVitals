@@ -2,30 +2,32 @@ import { memo, useCallback, useDeferredValue, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useRepo } from '../state/RepoContext'
 import { PageHeader } from '../components/PageHeader'
-import { DemoBanner } from '../components/DemoBanner'
+import { StatusBanner } from '../components/StatusBanner'
 import { Icon } from '../components/Icon'
 import { RiskPill } from '../components/RiskPill'
 import { Pagination } from '../components/Pagination'
 import { ModuleDetail } from '../components/ModuleDetail'
-import { LEVEL_LABEL } from '../lib/risk'
+import { LEVEL_LABEL, scoreText } from '../lib/risk'
+import { exportCsv } from '../lib/export'
+import { useToast } from '../components/Toast'
 import type { ModuleRow, RiskLevel } from '../lib/types'
-import { useState } from 'react'
 
 const PAGE = 10
-type SortKey = 'level' | 'cc' | 'churn' | 'busFactor' | 'deficiencies'
-const SORT_KEYS: SortKey[] = ['level', 'cc', 'churn', 'busFactor', 'deficiencies']
+type SortKey = 'score' | 'level' | 'cc' | 'churn' | 'busFactor' | 'deficiencies'
+const SORT_KEYS: SortKey[] = ['score', 'level', 'cc', 'churn', 'busFactor', 'deficiencies']
 const LEVELS: RiskLevel[] = ['HIGH', 'MEDIUM', 'LOW']
 const RANK: Record<RiskLevel, number> = { HIGH: 3, MEDIUM: 2, LOW: 1 }
 
 const Row = memo(function Row({ m, onOpen }: { m: ModuleRow; onOpen: (m: ModuleRow, opener: HTMLElement) => void }) {
   return (
-    <tr onClick={(e) => onOpen(m, e.currentTarget)} className="cursor-pointer border-t border-[#eef0f7] transition-colors hover:bg-brand-50/60">
-      <td className="max-w-[320px] px-3 py-3">
+    <tr onClick={(e) => onOpen(m, e.currentTarget)} className="cv-tr cursor-pointer transition-colors hover:bg-table">
+      <td className="cv-sticky max-w-[320px] px-3 py-3">
         <button onClick={(e) => { e.stopPropagation(); onOpen(m, e.currentTarget) }} className="flex max-w-full items-center gap-2 text-left">
           <Icon name="file" size={15} className="shrink-0 text-muted" /><span className="truncate">{m.path}</span>
         </button>
       </td>
       <td className="px-3 py-3"><RiskPill level={m.level} /></td>
+      <td className="px-3 py-3 tabular-nums font-semibold" style={{ color: scoreText(m.score) }}>{Math.round(m.score)}</td>
       <td className="px-3 py-3 tabular-nums">{m.cc}</td>
       <td className="px-3 py-3 tabular-nums">{m.churn}</td>
       <td className="px-3 py-3 tabular-nums">{m.busFactor}</td>
@@ -36,9 +38,9 @@ const Row = memo(function Row({ m, onOpen }: { m: ModuleRow; onOpen: (m: ModuleR
 })
 
 export default function Modulos() {
-  const { modules } = useRepo()
+  const { modules, summary } = useRepo()
+  const toast = useToast()
   const [params, setParams] = useSearchParams()
-  const [showFilter, setShowFilter] = useState(false)
   const opener = useRef<HTMLElement | null>(null)
 
   // Todo el estado de la vista vive en la URL: se puede compartir, recargar y usar el botón Atrás.
@@ -61,6 +63,11 @@ export default function Modulos() {
     [setParams],
   )
 
+  const counts = useMemo(() => ({
+    HIGH: modules.filter((m) => m.level === 'HIGH').length,
+    MEDIUM: modules.filter((m) => m.level === 'MEDIUM').length,
+    LOW: modules.filter((m) => m.level === 'LOW').length,
+  }), [modules])
   const deferredQ = useDeferredValue(q)
   const rows = useMemo(() => {
     const needle = deferredQ.toLowerCase()
@@ -87,8 +94,8 @@ export default function Modulos() {
     queueMicrotask(() => opener.current?.focus())
   }, [patch])
 
-  const th = (key: SortKey, label: string) => (
-    <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-soft" aria-sort={sort?.key === key ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'}>
+  const th = (key: SortKey, label: string, hint?: string) => (
+    <th scope="col" className="cv-th" title={hint} aria-sort={sort?.key === key ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'}>
       <button onClick={() => patch({ orden: sort?.key === key && sort.dir === -1 ? `${key}:asc` : `${key}:desc`, pagina: null })} className="inline-flex items-center gap-1 hover:text-ink">
         {label}{sort?.key === key && <span aria-hidden="true">{sort.dir === 1 ? '↑' : '↓'}</span>}
       </button>
@@ -102,43 +109,48 @@ export default function Modulos() {
         title="Módulos con mayor riesgo"
         subtitle="Módulos ordenados por nivel de riesgo de mantenibilidad."
         right={
-          <div className="relative flex items-center gap-2.5">
-            <label className="flex w-44 items-center gap-2 rounded-lg border border-[#e0e4f0] bg-white px-3 py-2.5 text-xs text-muted focus-within:border-brand">
-              <Icon name="search" size={14} />
-              <span className="sr-only">Buscar módulo</span>
-              <input type="search" value={q} onChange={(e) => patch({ q: e.target.value, pagina: null })} placeholder="Buscar módulo..." className="w-full bg-transparent text-ink outline-none placeholder:text-muted" />
-            </label>
-            <button aria-label="Filtrar por riesgo" aria-expanded={showFilter} onClick={() => setShowFilter(!showFilter)} className={`flex h-10 w-11 items-center justify-center rounded-lg border bg-white ${level !== 'ALL' ? 'border-brand text-brand' : 'border-[#e0e4f0] text-soft'}`}>
-              <Icon name="filter" size={16} strokeWidth={2} />
-            </button>
-            {showFilter && (
-              <div className="absolute right-0 top-12 z-10 w-44 rounded-lg border border-line bg-white p-1.5 shadow-lg" onKeyDown={(e) => e.key === 'Escape' && setShowFilter(false)}>
-                {(['ALL', ...LEVELS] as const).map((l) => (
-                  <button key={l} onClick={() => { patch({ nivel: l === 'ALL' ? null : l, pagina: null }); setShowFilter(false) }} className={`flex w-full items-center justify-between rounded-md px-3 py-2.5 text-xs ${level === l ? 'bg-brand-50 font-semibold text-brand' : 'hover:bg-canvas'}`}>
-                    {l === 'ALL' ? 'Todos los niveles' : LEVEL_LABEL[l]}{level === l && <Icon name="check" size={13} strokeWidth={2.4} />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <label className="cv-control flex min-h-10 w-full min-w-0 items-center gap-2 px-3 py-2 text-[13px] text-muted focus-within:border-brand sm:w-64">
+            <Icon name="search" size={14} />
+            <span className="sr-only">Buscar módulo</span>
+            <input type="search" value={q} onChange={(e) => patch({ q: e.target.value, pagina: null })} placeholder="Buscar módulo..." className="w-full bg-transparent text-ink outline-none placeholder:text-muted" />
+          </label>
         }
       />
-      <DemoBanner />
+      <StatusBanner />
 
-      <section className="rounded-xl border border-line bg-white p-4">
-        <div className="overflow-x-auto rounded-lg border border-line">
-          <table className="w-full min-w-[640px] border-collapse text-xs">
+      <section className="cv-card">
+        <div className="mb-3 flex flex-wrap items-center gap-2" role="group" aria-label="Filtrar por nivel de riesgo">
+          {(['ALL', ...LEVELS] as const).map((l) => {
+            const n = l === 'ALL' ? modules.length : counts[l]
+            const active = level === l
+            return (
+              <button key={l} type="button" aria-pressed={active} onClick={() => patch({ nivel: l === 'ALL' ? null : l, pagina: null })}
+                className="cv-chip">
+                {l === 'ALL' ? 'Todos' : LEVEL_LABEL[l]} <span className="tabular-nums opacity-80">({n})</span>
+              </button>
+            )
+          })}
+          <button type="button" disabled={rows.length === 0} onClick={() => toast.push('success', `Se descargó ${exportCsv(rows, summary.name)} con ${rows.length} módulos.`)}
+            className="cv-chip ml-auto inline-flex items-center gap-1.5 disabled:opacity-50">
+            Exportar CSV ({rows.length})
+          </button>
+          {(q || level !== 'ALL' || sort) && (
+            <button type="button" onClick={() => patch({ q: null, nivel: null, orden: null, pagina: null })} className="min-h-9 px-2 text-[13px] font-semibold text-brand hover:underline">Limpiar filtros</button>
+          )}
+        </div>
+        <div className="cv-table-wrap rounded-lg border border-line">
+          <table className="cv-table min-w-[700px]">
             <caption className="sr-only">Módulos del repositorio ordenados por riesgo</caption>
-            <thead className="bg-[#f7f8fc]">
+            <thead className="bg-table">
               <tr>
-                <th scope="col" className="px-3 py-2.5 text-left text-[11px] font-semibold text-soft">Módulo</th>
-                {th('level', 'Riesgo')}{th('cc', 'CC')}{th('churn', 'Cambios')}{th('busFactor', 'Bus')}{th('deficiencies', 'Deficiencias')}
+                <th scope="col" className="cv-th cv-sticky-head">Módulo</th>
+                {th('level', 'Riesgo')}{th('score', 'Puntaje', 'Puntaje de riesgo (0-100)')}{th('cc', 'CC', 'Complejidad ciclomática')}{th('churn', 'Cambios', 'Frecuencia de cambios')}{th('busFactor', 'Bus factor')}{th('deficiencies', 'Deficiencias')}
                 <th className="w-8"><span className="sr-only">Abrir</span></th>
               </tr>
             </thead>
             <tbody>
               {slice.map((m) => <Row key={m.path} m={m} onOpen={open} />)}
-              {slice.length === 0 && <tr><td colSpan={7} className="px-3 py-10 text-center text-muted">Ningún módulo coincide con la búsqueda.</td></tr>}
+              {slice.length === 0 && <tr><td colSpan={8} className="px-3 py-10 text-center text-muted">Ningún módulo coincide. Prueba con otra búsqueda o limpia los filtros.</td></tr>}
             </tbody>
           </table>
         </div>

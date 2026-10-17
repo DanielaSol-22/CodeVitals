@@ -1,43 +1,131 @@
 @import "tailwindcss";
 
+/*
+ * Sistema visual de CodeVitals.
+ * Todos los colores son tokens: el modo oscuro solo redefine los valores bajo
+ * :root[data-theme="dark"], así que ningún componente necesita un color fijo.
+ * Pares de texto/fondo verificados con contraste >= 4.5:1 (AA) en ambos temas.
+ */
 @theme {
-  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --color-navy: #131b33;
-  --color-navy-2: #1a2440;
-  --color-navy-line: #33405f;
-  --color-navy-text: #d6dcf0;
-  --color-navy-mute: #8e98b8;
-  --color-canvas: #f3f5fb;
-  --color-line: #e6e9f4;
-  --color-ink: #141b34;
-  --color-soft: #4a5378;
-  --color-muted: #6b7497;
-  --color-brand: #4f46e5;
-  --color-brand-50: #f0f1fb;
+  --shadow-card: 0 1px 2px rgba(15, 23, 32, 0.05);
+  --shadow-pop: 0 12px 32px -8px rgba(15, 23, 32, 0.22);
 
-  --color-risk-low: #2f9e63;
-  --color-risk-low-bg: #e3f5ec;
-  --color-risk-low-fg: #237a4d;
-  --color-risk-low-bar: #4caf7d;
-  --color-risk-med: #f0a020;
-  --color-risk-med-bg: #fff0d0;
-  --color-risk-med-fg: #8f5a05;
-  --color-risk-med-bar: #fbc558;
-  --color-risk-high: #e04d4d;
-  --color-risk-high-bg: #fde8e8;
-  --color-risk-high-fg: #b42e2e;
-  --color-risk-high-bar: #f28c8c;
+  /* Superficies y texto */
+  --color-canvas: #f3f5f7;
+  --color-surface: #ffffff;
+  --color-table: #f7f9fa;
+  --color-line: #dbe1e7;
+  --color-ink: #0f1720;
+  --color-soft: #364352;
+  --color-muted: #536173;
+
+  /* Marca */
+  --color-brand: #0b6360;
+  --color-brand-50: #e5f2f1;
+  --color-on-brand: #ffffff;
+
+  /* Texto sobre fondo de acento (hero, píldoras) */
+  --color-nav-active: #e5f2f1;
+
+  /* Riesgo: color de texto/ícono, fondo suave, texto sobre fondo suave y color de relleno */
+  --color-risk-low: #19794a;
+  --color-risk-low-bg: #e2f4ea;
+  --color-risk-low-fg: #145f3a;
+  --color-risk-low-bar: #2a9d63;
+  --color-risk-med: #94600a;
+  --color-risk-med-bg: #fbefd2;
+  --color-risk-med-fg: #6d4506;
+  --color-risk-med-bar: #b87707;
+  --color-risk-high: #b82f2f;
+  --color-risk-high-bg: #fbe6e6;
+  --color-risk-high-fg: #8f2020;
+  --color-risk-high-bar: #d94b4b;
+
+  /* Series de gráficos (una por componente de la fórmula) */
+  --color-chart-complexity: #2159c9;
+  --color-chart-churn: #7b3fc4;
+  --color-chart-loc: #0a7d8c;
+  --color-chart-duplication: #b6347f;
+  --color-chart-busfactor: #5d6b7a;
+  --color-chart-line: #0b6360;
 }
 
-/* Tailwind 4 usa currentColor por defecto en los bordes; se conserva el gris de la v3. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --shadow-card: none;
+  --shadow-pop: 0 12px 32px -8px rgba(0, 0, 0, 0.6);
+
+  --color-canvas: #0b1016;
+  --color-surface: #131a22;
+  --color-table: #19222c;
+  --color-line: #2a3541;
+  --color-ink: #e9eef3;
+  --color-soft: #b9c4cf;
+  --color-muted: #94a2b1;
+
+  --color-brand: #4fd1c5;
+  --color-brand-50: #14302f;
+  --color-on-brand: #04201e;
+  --color-nav-active: #14302f;
+
+  --color-risk-low: #5fd394;
+  --color-risk-low-bg: #12301f;
+  --color-risk-low-fg: #8be4b2;
+  --color-risk-low-bar: #3fb979;
+  --color-risk-med: #f0b44a;
+  --color-risk-med-bg: #35270a;
+  --color-risk-med-fg: #f6cb7c;
+  --color-risk-med-bar: #e0a02b;
+  --color-risk-high: #f27d7d;
+  --color-risk-high-bg: #3a1618;
+  --color-risk-high-fg: #f7a3a3;
+  --color-risk-high-bar: #e86363;
+
+  --color-chart-complexity: #7fa8ff;
+  --color-chart-churn: #bd98f0;
+  --color-chart-loc: #4fc8d8;
+  --color-chart-duplication: #ef8bc3;
+  --color-chart-busfactor: #a8b5c2;
+  --color-chart-line: #4fd1c5;
+}
+
+/* Tailwind 4 usa currentColor por defecto en los bordes: se fija al token de línea. */
 @layer base {
-  *, ::after, ::before, ::backdrop, ::file-selector-button { border-color: #e5e7eb; }
+  *, ::after, ::before, ::backdrop, ::file-selector-button { border-color: var(--color-line); }
+  html { -webkit-text-size-adjust: 100%; }
+  button, [role="tab"], select, summary { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+}
+
+@layer components {
+  .cv-card { @apply min-w-0 rounded-xl border border-line bg-surface p-5 shadow-card; }
+  .cv-table-wrap { @apply overflow-x-auto; }
+  .cv-table { @apply w-full min-w-[520px] border-collapse text-[13px]; }
+  .cv-th { @apply whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold text-muted; }
+  .cv-td { @apply px-3 py-3; }
+  .cv-tr { @apply border-b border-line last:border-0; }
+  .cv-control { @apply rounded-lg border border-line bg-surface text-ink; }
+  .cv-label { @apply text-xs font-medium text-muted; }
+  .cv-sticky { @apply sticky left-0 z-[1] bg-surface; }
+  .cv-sticky-head { @apply sticky left-0 z-[1] bg-table; }
+  .cv-eyebrow { @apply text-xs font-semibold uppercase tracking-[0.08em] text-muted; }
+  .cv-h2 { @apply text-base font-semibold tracking-tight; }
+  .cv-btn { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-line bg-surface px-3.5 py-2 text-[13px] font-semibold text-ink transition-colors hover:border-brand hover:text-brand disabled:opacity-60; }
+  .cv-btn-primary { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-on-brand transition-opacity hover:opacity-90 disabled:opacity-50; }
+  .cv-seg { @apply flex rounded-lg bg-canvas p-1; }
+  .cv-seg-btn { @apply min-h-8 rounded-md px-3 py-1 text-[13px] font-semibold text-muted transition-colors hover:text-ink aria-selected:bg-surface aria-selected:text-ink aria-selected:shadow-card; }
+  .cv-chip { @apply min-h-9 rounded-full border border-line bg-surface px-3.5 py-1.5 text-[13px] font-semibold text-soft transition-colors hover:border-brand hover:text-brand aria-pressed:border-brand aria-pressed:bg-brand aria-pressed:text-on-brand aria-selected:border-brand aria-selected:bg-brand aria-selected:text-on-brand; }
+  .cv-empty { @apply rounded-lg border border-dashed border-line bg-canvas px-4 py-10 text-center text-[13px] text-muted; }
 }
 
 html, body, #root { min-height: 100%; }
-body { @apply bg-canvas font-sans text-ink antialiased; margin: 0; }
-:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }
+body { @apply bg-canvas font-sans text-ink antialiased; margin: 0; font-feature-settings: "tnum" 0; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline-offset: 0; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }

@@ -18,6 +18,8 @@ from typing import Any
 import numpy as np
 from scipy import stats
 
+from app.modules.risk_detector import RiskDetector
+
 ALPHA_DEFAULT = 0.05
 MIN_SAMPLE = 5  # mínimo de módulos para que las pruebas tengan sentido
 
@@ -176,6 +178,146 @@ def chi_square(metric_values, classifications, alpha: float = ALPHA_DEFAULT) -> 
             "low_expected_warning": low_exp, "interpretation": interp}
 
 
+MIN_COMMITS_EXTERNAL = 5  # un módulo con pocos commits no permite estimar su proporción de correcciones
+
+
+def external_validity(modules: list[dict], alpha: float = ALPHA_DEFAULT,
+                      min_commits: int = MIN_COMMITS_EXTERNAL) -> dict[str, Any]:
+    """Validez contra un criterio EXTERNO: la proporción de commits de corrección de errores.
+
+    El puntaje se calcula con las métricas, así que correlacionarlo con ellas es parcialmente
+    circular. En cambio, la proporción de commits "fix" de un archivo viene de otra fuente (el
+    historial: lo que el equipo tuvo que corregir). Si los módulos de riesgo alto concentran
+    más correcciones, el puntaje captura dificultades reales de mantenimiento.
+
+    Se usa la PROPORCIÓN (fix_commits / commits) y no el conteo, porque el conteo crece con la
+    frecuencia de modificaciones, que ya forma parte de la fórmula, y daría una correlación
+    mecánica. Solo se consideran módulos con al menos `min_commits` commits.
+    """
+    eligible = [m for m in modules if m["git_metrics"].get("commits", 0) >= min_commits]
+    base: dict[str, Any] = {
+        "criterion": "Proporción de commits de corrección de errores (fix / commits del archivo)",
+        "min_commits": min_commits,
+        "n_total": len(modules),
+        "n_eligible": len(eligible),
+        "alpha": alpha,
+    }
+    if len(eligible) < MIN_SAMPLE:
+        return {**base, "sufficient": False, "score": None, "by_metric": [], "by_class": [], "kruskal": None,
+                "note": f"Muestra insuficiente: solo {len(eligible)} módulos tienen al menos {min_commits} commits."}
+
+    ratio = [m["git_metrics"].get("fix_commits", 0) / m["git_metrics"]["commits"] for m in eligible]
+    scores = [m["risk_analysis"]["risk_score"] for m in eligible]
+    classes = [m["risk_analysis"]["classification"] for m in eligible]
+
+    by_metric = []
+    for key, (label, getter) in METRICS.items():
+        by_metric.append({"variable": key, "label": label, "in_formula": key in IN_FORMULA,
+                          **spearman([getter(m) for m in eligible], ratio, alpha)})
+
+    by_class = []
+    groups = []
+    for cls in ("LOW", "MEDIUM", "HIGH"):
+        vals = [r for r, c in zip(ratio, classes) if c == cls]
+        if vals:
+            by_class.append({"classification": cls, "n": len(vals),
+                             "mean_ratio": round(float(np.mean(vals)), 4),
+                             "median_ratio": round(float(np.median(vals)), 4)})
+            if len(vals) >= 2:
+                groups.append(vals)
+
+    kruskal = None
+    if len(groups) >= 2:
+        try:
+            h, p = stats.kruskal(*groups)
+            kruskal = {"h": round(float(h), 4), "p_value": round(float(p), 6), "significant": bool(p < alpha)}
+        except ValueError:  # todos los valores idénticos
+            kruskal = None
+
+    return {
+        **base,
+        "sufficient": True,
+        "n_with_fixes": int(sum(1 for r in ratio if r > 0)),
+        "score": spearman(scores, ratio, alpha),
+        "by_metric": by_metric,
+        "by_class": by_class,
+        "kruskal": kruskal,
+        "note": (
+            "Los commits de corrección se detectan por palabras clave del mensaje (fix, bug, defect, crash, "
+            "regression) y excluyen correcciones de texto (typo, docs, format). Es una aproximación: "
+            "depende de la disciplina del equipo al escribir sus mensajes. El puntaje se calcula con el "
+            "código actual y las correcciones son pasadas; una validación predictiva estricta compararía "
+            "el puntaje en un momento con las correcciones posteriores."
+        ),
+    }
+
+
+SENSITIVITY_DELTA = 0.2     # variación de cada peso: ±20 %
+SENSITIVITY_RUNS = 1000     # simulaciones con todos los pesos variando a la vez
+_CLASS_ORDER = ("LOW", "MEDIUM", "HIGH")
+
+
+def weight_sensitivity(modules: list[dict], delta: float = SENSITIVITY_DELTA,
+                       runs: int = SENSITIVITY_RUNS, seed: int = 42) -> dict[str, Any]:
+    """Análisis de sensibilidad de los pesos de la fórmula.
+
+    Responde "¿qué tan dependientes son los resultados de los pesos elegidos?". Se usan los
+    puntajes por componente ya calculados y se recalcula el puntaje con pesos alterados:
+      1. Un peso a la vez: se sube o baja `delta` (±20 %) y los demás se reescalan para que la
+         suma siga siendo 1.
+      2. Simulación: todos los pesos varían a la vez, cada uno al azar entre ±`delta`.
+    Para cada escenario se reporta qué porcentaje de módulos cambia de clasificación y qué tanto
+    se parece el nuevo orden de módulos al original (Spearman).
+    """
+    keys = list(RiskDetector.WEIGHTS)
+    n = len(modules)
+    base = {"delta": delta, "n_modules": n}
+    if n < MIN_SAMPLE:
+        return {**base, "sufficient": False, "scenarios": [], "monte_carlo": None, "most_sensitive": None}
+
+    detector = RiskDetector()
+    comps = np.array([[m["risk_analysis"]["component_scores"].get(k, 0) for k in keys] for m in modules], dtype=float)
+    w0 = np.array([RiskDetector.WEIGHTS[k] for k in keys], dtype=float)
+
+    def classify(scores: np.ndarray) -> np.ndarray:
+        return np.array([detector._classify_risk(float(x)) for x in scores])
+
+    w0 = w0 / w0.sum()
+    s0 = comps @ w0
+    c0 = classify(s0)
+
+    def compare(w: np.ndarray) -> dict[str, float]:
+        w = w / w.sum()  # el puntaje se normaliza por la suma de pesos
+        s1 = comps @ w
+        changed = float(np.mean(classify(s1) != c0) * 100)
+        rho = 1.0 if np.ptp(s0) == 0 or np.ptp(s1) == 0 else float(stats.spearmanr(s0, s1).statistic)
+        diff = np.abs(s1 - s0)
+        return {"pct_changed": round(changed, 2), "rho": round(rho, 4),
+                "mean_abs_diff": round(float(diff.mean()), 3), "max_abs_diff": round(float(diff.max()), 3)}
+
+    scenarios = []
+    for i, k in enumerate(keys):
+        for sign, name in ((-1, "baja"), (1, "sube")):
+            w = w0.copy()
+            w[i] *= 1 + sign * delta
+            scenarios.append({"weight": k, "label": METRICS[k][0] if k in METRICS else k,
+                              "base_weight": float(w0[i]), "direction": name, **compare(w)})
+
+    rng = np.random.default_rng(seed)
+    sims = [compare(w0 * (1 + rng.uniform(-delta, delta, size=len(keys)))) for _ in range(runs)]
+    changed = np.array([x["pct_changed"] for x in sims])
+    monte_carlo = {
+        "runs": runs,
+        "median_pct_changed": round(float(np.median(changed)), 2),
+        "p95_pct_changed": round(float(np.percentile(changed, 95)), 2),
+        "worst_pct_changed": round(float(changed.max()), 2),
+        "min_rho": round(float(min(x["rho"] for x in sims)), 4),
+    }
+    worst = max(scenarios, key=lambda x: x["pct_changed"])
+    return {**base, "sufficient": True, "scenarios": scenarios, "monte_carlo": monte_carlo,
+            "most_sensitive": {"label": worst["label"], "direction": worst["direction"], "pct_changed": worst["pct_changed"]}}
+
+
 def analyze_modules(modules: list[dict], alpha: float = ALPHA_DEFAULT) -> dict[str, Any]:
     """Ejecuta toda la validación sobre la lista de módulos analizados
     (la misma estructura que devuelve RiskDetector.analyze_module)."""
@@ -200,6 +342,8 @@ def analyze_modules(modules: list[dict], alpha: float = ALPHA_DEFAULT) -> dict[s
         "descriptives": descriptives,
         "spearman": correlations,
         "chi_square": chi_squares,
+        "external_validity": external_validity(modules, alpha),
+        "weight_sensitivity": weight_sensitivity(modules),
         "note": (
             "Spearman correlaciona cada métrica con el puntaje de riesgo (que a su vez se calcula "
             "con estas métricas), por lo que una correlación alta es esperable; se reporta para "
