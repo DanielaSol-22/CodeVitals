@@ -9,3 +9,7 @@ venv/
 node_modules/
 .DS_Store
 *.log
+backend/repos/
+.pytest_cache/
+pytest-cache-files-*/
+dist/
