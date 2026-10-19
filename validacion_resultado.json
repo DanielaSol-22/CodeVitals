@@ -1,0 +1,574 @@
+﻿{
+    "n_modules":  912,
+    "alpha":  0.05,
+    "sufficient_sample":  true,
+    "descriptives":  {
+                         "risk_score":  {
+                                            "label":  "Puntaje de riesgo",
+                                            "n":  912,
+                                            "mean":  29.9006,
+                                            "median":  21.765,
+                                            "std":  23.6656,
+                                            "min":  3.11,
+                                            "max":  89.66
+                                        },
+                         "cyclomatic_complexity":  {
+                                                       "label":  "Complejidad ciclomÃ¡tica",
+                                                       "n":  912,
+                                                       "mean":  19.1776,
+                                                       "median":  4.0,
+                                                       "std":  54.5027,
+                                                       "min":  0.0,
+                                                       "max":  704.0
+                                                   },
+                         "lines_of_code":  {
+                                               "label":  "LÃ­neas de cÃ³digo (LOC)",
+                                               "n":  912,
+                                               "mean":  208.3651,
+                                               "median":  38.0,
+                                               "std":  1621.4486,
+                                               "min":  0.0,
+                                               "max":  41440.0
+                                           },
+                         "code_churn":  {
+                                            "label":  "Frecuencia de modificaciones (commits)",
+                                            "n":  912,
+                                            "mean":  10.4408,
+                                            "median":  2.0,
+                                            "std":  26.1425,
+                                            "min":  1.0,
+                                            "max":  309.0
+                                        },
+                         "code_duplication":  {
+                                                  "label":  "DuplicaciÃ³n de cÃ³digo (puntaje)",
+                                                  "n":  912,
+                                                  "mean":  10.9753,
+                                                  "median":  0.0,
+                                                  "std":  23.48,
+                                                  "min":  0.0,
+                                                  "max":  100.0
+                                              },
+                         "bus_factor":  {
+                                            "label":  "Bus factor (riesgo %)",
+                                            "n":  912,
+                                            "mean":  45.1913,
+                                            "median":  40.0,
+                                            "std":  28.3482,
+                                            "min":  10.07,
+                                            "max":  100.0
+                                        },
+                         "cognitive_complexity":  {
+                                                      "label":  "Complejidad cognitiva",
+                                                      "n":  649,
+                                                      "mean":  19.7165,
+                                                      "median":  1.0,
+                                                      "std":  67.5712,
+                                                      "min":  0.0,
+                                                      "max":  795.0
+                                                  },
+                         "churn_lines":  {
+                                             "label":  "Code churn (lÃ­neas agregadas y eliminadas)",
+                                             "n":  912,
+                                             "mean":  344.6919,
+                                             "median":  36.0,
+                                             "std":  1788.9512,
+                                             "min":  0.0,
+                                             "max":  41440.0
+                                         }
+                     },
+    "spearman":  [
+                     {
+                         "variable":  "cyclomatic_complexity",
+                         "label":  "Complejidad ciclomÃ¡tica",
+                         "in_formula":  true,
+                         "test":  "spearman",
+                         "n":  912,
+                         "alpha":  0.05,
+                         "rho":  0.8918,
+                         "p_value":  0.0,
+                         "significant":  true,
+                         "interpretation":  "CorrelaciÃ³n positiva muy fuerte estadÃ­sticamente significativa (p \u003c 0.05)."
+                     },
+                     {
+                         "variable":  "lines_of_code",
+                         "label":  "LÃ­neas de cÃ³digo (LOC)",
+                         "in_formula":  true,
+                         "test":  "spearman",
+                         "n":  912,
+                         "alpha":  0.05,
+                         "rho":  0.8241,
+                         "p_value":  0.0,
+                         "significant":  true,
+                         "interpretation":  "CorrelaciÃ³n positiva muy fuerte estadÃ­sticamente significativa (p \u003c 0.05)."
+                     },
+                     {
+                         "variable":  "code_churn",
+                         "label":  "Frecuencia de modificaciones (commits)",
+                         "in_formula":  true,
+                         "test":  "spearman",
+                         "n":  912,
+                         "alpha":  0.05,
+                         "rho":  0.7711,
+                         "p_value":  0.0,
+                         "significant":  true,
+                         "interpretation":  "CorrelaciÃ³n positiva muy fuerte estadÃ­sticamente significativa (p \u003c 0.05)."
+                     },
+                     {
+                         "variable":  "code_duplication",
+                         "label":  "DuplicaciÃ³n de cÃ³digo (puntaje)",
+                         "in_formula":  true,
+                         "test":  "spearman",
+                         "n":  912,
+                         "alpha":  0.05,
+                         "rho":  0.2094,
+                         "p_value":  0.0,
+                         "significant":  true,
+                         "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                     },
+                     {
+                         "variable":  "bus_factor",
+                         "label":  "Bus factor (riesgo %)",
+                         "in_formula":  true,
+                         "test":  "spearman",
+                         "n":  912,
+                         "alpha":  0.05,
+                         "rho":  0.3554,
+                         "p_value":  0.0,
+                         "significant":  true,
+                         "interpretation":  "CorrelaciÃ³n positiva moderada estadÃ­sticamente significativa (p \u003c 0.05)."
+                     },
+                     {
+                         "variable":  "cognitive_complexity",
+                         "label":  "Complejidad cognitiva",
+                         "in_formula":  false,
+                         "test":  "spearman",
+                         "n":  649,
+                         "alpha":  0.05,
+                         "rho":  0.6642,
+                         "p_value":  0.0,
+                         "significant":  true,
+                         "interpretation":  "CorrelaciÃ³n positiva fuerte estadÃ­sticamente significativa (p \u003c 0.05)."
+                     },
+                     {
+                         "variable":  "churn_lines",
+                         "label":  "Code churn (lÃ­neas agregadas y eliminadas)",
+                         "in_formula":  false,
+                         "test":  "spearman",
+                         "n":  912,
+                         "alpha":  0.05,
+                         "rho":  0.7493,
+                         "p_value":  0.0,
+                         "significant":  true,
+                         "interpretation":  "CorrelaciÃ³n positiva muy fuerte estadÃ­sticamente significativa (p \u003c 0.05)."
+                     }
+                 ],
+    "chi_square":  [
+                       {
+                           "variable":  "cyclomatic_complexity",
+                           "label":  "Complejidad ciclomÃ¡tica",
+                           "in_formula":  true,
+                           "test":  "chi_square",
+                           "n":  912,
+                           "alpha":  0.05,
+                           "chi2":  648.944,
+                           "p_value":  0.0,
+                           "dof":  4,
+                           "cramers_v":  0.5965,
+                           "significant":  true,
+                           "low_expected_warning":  false,
+                           "interpretation":  "Existe asociaciÃ³n significativa entre la clasificaciÃ³n de riesgo y la mÃ©trica (p \u003c 0.05), V de CramÃ©r = 0.60."
+                       },
+                       {
+                           "variable":  "lines_of_code",
+                           "label":  "LÃ­neas de cÃ³digo (LOC)",
+                           "in_formula":  true,
+                           "test":  "chi_square",
+                           "n":  912,
+                           "alpha":  0.05,
+                           "chi2":  484.9147,
+                           "p_value":  0.0,
+                           "dof":  4,
+                           "cramers_v":  0.5156,
+                           "significant":  true,
+                           "low_expected_warning":  false,
+                           "interpretation":  "Existe asociaciÃ³n significativa entre la clasificaciÃ³n de riesgo y la mÃ©trica (p \u003c 0.05), V de CramÃ©r = 0.52."
+                       },
+                       {
+                           "variable":  "code_churn",
+                           "label":  "Frecuencia de modificaciones (commits)",
+                           "in_formula":  true,
+                           "test":  "chi_square",
+                           "n":  912,
+                           "alpha":  0.05,
+                           "chi2":  359.0605,
+                           "p_value":  0.0,
+                           "dof":  4,
+                           "cramers_v":  0.4437,
+                           "significant":  true,
+                           "low_expected_warning":  false,
+                           "interpretation":  "Existe asociaciÃ³n significativa entre la clasificaciÃ³n de riesgo y la mÃ©trica (p \u003c 0.05), V de CramÃ©r = 0.44."
+                       },
+                       {
+                           "variable":  "code_duplication",
+                           "label":  "DuplicaciÃ³n de cÃ³digo (puntaje)",
+                           "in_formula":  true,
+                           "test":  "chi_square",
+                           "n":  912,
+                           "alpha":  0.05,
+                           "chi2":  67.5987,
+                           "p_value":  0.0,
+                           "dof":  4,
+                           "cramers_v":  0.1925,
+                           "significant":  true,
+                           "low_expected_warning":  true,
+                           "interpretation":  "Existe asociaciÃ³n significativa entre la clasificaciÃ³n de riesgo y la mÃ©trica (p \u003c 0.05), V de CramÃ©r = 0.19. Aviso: hay frecuencias esperadas menores a 5, interpretar con cautela."
+                       },
+                       {
+                           "variable":  "bus_factor",
+                           "label":  "Bus factor (riesgo %)",
+                           "in_formula":  true,
+                           "test":  "chi_square",
+                           "n":  912,
+                           "alpha":  0.05,
+                           "chi2":  56.5938,
+                           "p_value":  0.0,
+                           "dof":  4,
+                           "cramers_v":  0.1761,
+                           "significant":  true,
+                           "low_expected_warning":  false,
+                           "interpretation":  "Existe asociaciÃ³n significativa entre la clasificaciÃ³n de riesgo y la mÃ©trica (p \u003c 0.05), V de CramÃ©r = 0.18."
+                       },
+                       {
+                           "variable":  "cognitive_complexity",
+                           "label":  "Complejidad cognitiva",
+                           "in_formula":  false,
+                           "test":  "chi_square",
+                           "n":  649,
+                           "alpha":  0.05,
+                           "chi2":  232.1307,
+                           "p_value":  0.0,
+                           "dof":  4,
+                           "cramers_v":  0.4229,
+                           "significant":  true,
+                           "low_expected_warning":  false,
+                           "interpretation":  "Existe asociaciÃ³n significativa entre la clasificaciÃ³n de riesgo y la mÃ©trica (p \u003c 0.05), V de CramÃ©r = 0.42."
+                       },
+                       {
+                           "variable":  "churn_lines",
+                           "label":  "Code churn (lÃ­neas agregadas y eliminadas)",
+                           "in_formula":  false,
+                           "test":  "chi_square",
+                           "n":  912,
+                           "alpha":  0.05,
+                           "chi2":  368.4559,
+                           "p_value":  0.0,
+                           "dof":  4,
+                           "cramers_v":  0.4494,
+                           "significant":  true,
+                           "low_expected_warning":  false,
+                           "interpretation":  "Existe asociaciÃ³n significativa entre la clasificaciÃ³n de riesgo y la mÃ©trica (p \u003c 0.05), V de CramÃ©r = 0.45."
+                       }
+                   ],
+    "external_validity":  {
+                              "criterion":  "ProporciÃ³n de commits de correcciÃ³n de errores (fix / commits del archivo)",
+                              "min_commits":  5,
+                              "n_total":  912,
+                              "n_eligible":  338,
+                              "alpha":  0.05,
+                              "sufficient":  true,
+                              "n_with_fixes":  238,
+                              "score":  {
+                                            "test":  "spearman",
+                                            "n":  338,
+                                            "alpha":  0.05,
+                                            "rho":  0.2856,
+                                            "p_value":  0.0,
+                                            "significant":  true,
+                                            "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                                        },
+                              "by_metric":  [
+                                                {
+                                                    "variable":  "cyclomatic_complexity",
+                                                    "label":  "Complejidad ciclomÃ¡tica",
+                                                    "in_formula":  true,
+                                                    "test":  "spearman",
+                                                    "n":  338,
+                                                    "alpha":  0.05,
+                                                    "rho":  0.2274,
+                                                    "p_value":  2.4E-05,
+                                                    "significant":  true,
+                                                    "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                },
+                                                {
+                                                    "variable":  "lines_of_code",
+                                                    "label":  "LÃ­neas de cÃ³digo (LOC)",
+                                                    "in_formula":  true,
+                                                    "test":  "spearman",
+                                                    "n":  338,
+                                                    "alpha":  0.05,
+                                                    "rho":  0.2428,
+                                                    "p_value":  6E-06,
+                                                    "significant":  true,
+                                                    "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                },
+                                                {
+                                                    "variable":  "code_churn",
+                                                    "label":  "Frecuencia de modificaciones (commits)",
+                                                    "in_formula":  true,
+                                                    "test":  "spearman",
+                                                    "n":  338,
+                                                    "alpha":  0.05,
+                                                    "rho":  0.1577,
+                                                    "p_value":  0.003662,
+                                                    "significant":  true,
+                                                    "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                },
+                                                {
+                                                    "variable":  "code_duplication",
+                                                    "label":  "DuplicaciÃ³n de cÃ³digo (puntaje)",
+                                                    "in_formula":  true,
+                                                    "test":  "spearman",
+                                                    "n":  338,
+                                                    "alpha":  0.05,
+                                                    "rho":  0.2663,
+                                                    "p_value":  1E-06,
+                                                    "significant":  true,
+                                                    "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                },
+                                                {
+                                                    "variable":  "bus_factor",
+                                                    "label":  "Bus factor (riesgo %)",
+                                                    "in_formula":  true,
+                                                    "test":  "spearman",
+                                                    "n":  338,
+                                                    "alpha":  0.05,
+                                                    "rho":  0.1954,
+                                                    "p_value":  0.000301,
+                                                    "significant":  true,
+                                                    "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                },
+                                                {
+                                                    "variable":  "cognitive_complexity",
+                                                    "label":  "Complejidad cognitiva",
+                                                    "in_formula":  false,
+                                                    "test":  "spearman",
+                                                    "n":  313,
+                                                    "alpha":  0.05,
+                                                    "rho":  0.0902,
+                                                    "p_value":  0.111044,
+                                                    "significant":  false,
+                                                    "interpretation":  "CorrelaciÃ³n nula no significativa (p â¥ 0.05); no se puede afirmar relaciÃ³n."
+                                                },
+                                                {
+                                                    "variable":  "churn_lines",
+                                                    "label":  "Code churn (lÃ­neas agregadas y eliminadas)",
+                                                    "in_formula":  false,
+                                                    "test":  "spearman",
+                                                    "n":  338,
+                                                    "alpha":  0.05,
+                                                    "rho":  0.2244,
+                                                    "p_value":  3.1E-05,
+                                                    "significant":  true,
+                                                    "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                }
+                                            ],
+                              "by_class":  [
+                                               {
+                                                   "classification":  "LOW",
+                                                   "n":  130,
+                                                   "mean_ratio":  0.1032,
+                                                   "median_ratio":  0.0544
+                                               },
+                                               {
+                                                   "classification":  "MEDIUM",
+                                                   "n":  121,
+                                                   "mean_ratio":  0.1308,
+                                                   "median_ratio":  0.0968
+                                               },
+                                               {
+                                                   "classification":  "HIGH",
+                                                   "n":  87,
+                                                   "mean_ratio":  0.187,
+                                                   "median_ratio":  0.1667
+                                               }
+                                           ],
+                              "kruskal":  {
+                                              "h":  28.4132,
+                                              "p_value":  1E-06,
+                                              "significant":  true
+                                          },
+                              "note":  "Los commits de correcciÃ³n se detectan por palabras clave del mensaje (fix, bug, defect, crash, regression) y excluyen correcciones de texto (typo, docs, format). Es una aproximaciÃ³n: depende de la disciplina del equipo al escribir sus mensajes. El puntaje se calcula con el cÃ³digo actual y las correcciones son pasadas; una validaciÃ³n predictiva estricta compararÃ­a el puntaje en un momento con las correcciones posteriores."
+                          },
+    "weight_sensitivity":  {
+                               "delta":  0.2,
+                               "n_modules":  912,
+                               "sufficient":  true,
+                               "scenarios":  [
+                                                 {
+                                                     "weight":  "cyclomatic_complexity",
+                                                     "label":  "Complejidad ciclomÃ¡tica",
+                                                     "base_weight":  0.3488372093023256,
+                                                     "direction":  "baja",
+                                                     "pct_changed":  3.07,
+                                                     "rho":  0.999,
+                                                     "mean_abs_diff":  1.204,
+                                                     "max_abs_diff":  4.438
+                                                 },
+                                                 {
+                                                     "weight":  "cyclomatic_complexity",
+                                                     "label":  "Complejidad ciclomÃ¡tica",
+                                                     "base_weight":  0.3488372093023256,
+                                                     "direction":  "sube",
+                                                     "pct_changed":  2.74,
+                                                     "rho":  0.9994,
+                                                     "mean_abs_diff":  1.047,
+                                                     "max_abs_diff":  3.859
+                                                 },
+                                                 {
+                                                     "weight":  "code_churn",
+                                                     "label":  "Frecuencia de modificaciones (commits)",
+                                                     "base_weight":  0.2558139534883721,
+                                                     "direction":  "baja",
+                                                     "pct_changed":  1.86,
+                                                     "rho":  0.9993,
+                                                     "mean_abs_diff":  0.74,
+                                                     "max_abs_diff":  3.733
+                                                 },
+                                                 {
+                                                     "weight":  "code_churn",
+                                                     "label":  "Frecuencia de modificaciones (commits)",
+                                                     "base_weight":  0.2558139534883721,
+                                                     "direction":  "sube",
+                                                     "pct_changed":  2.19,
+                                                     "rho":  0.9995,
+                                                     "mean_abs_diff":  0.668,
+                                                     "max_abs_diff":  3.369
+                                                 },
+                                                 {
+                                                     "weight":  "lines_of_code",
+                                                     "label":  "LÃ­neas de cÃ³digo (LOC)",
+                                                     "base_weight":  0.1627906976744186,
+                                                     "direction":  "baja",
+                                                     "pct_changed":  1.32,
+                                                     "rho":  0.9998,
+                                                     "mean_abs_diff":  0.538,
+                                                     "max_abs_diff":  2.662
+                                                 },
+                                                 {
+                                                     "weight":  "lines_of_code",
+                                                     "label":  "LÃ­neas de cÃ³digo (LOC)",
+                                                     "base_weight":  0.1627906976744186,
+                                                     "direction":  "sube",
+                                                     "pct_changed":  1.64,
+                                                     "rho":  0.9998,
+                                                     "mean_abs_diff":  0.504,
+                                                     "max_abs_diff":  2.494
+                                                 },
+                                                 {
+                                                     "weight":  "code_duplication",
+                                                     "label":  "DuplicaciÃ³n de cÃ³digo (puntaje)",
+                                                     "base_weight":  0.11627906976744186,
+                                                     "direction":  "baja",
+                                                     "pct_changed":  1.64,
+                                                     "rho":  0.9994,
+                                                     "mean_abs_diff":  0.713,
+                                                     "max_abs_diff":  2.084
+                                                 },
+                                                 {
+                                                     "weight":  "code_duplication",
+                                                     "label":  "DuplicaciÃ³n de cÃ³digo (puntaje)",
+                                                     "base_weight":  0.11627906976744186,
+                                                     "direction":  "sube",
+                                                     "pct_changed":  2.19,
+                                                     "rho":  0.9995,
+                                                     "mean_abs_diff":  0.68,
+                                                     "max_abs_diff":  1.99
+                                                 },
+                                                 {
+                                                     "weight":  "bus_factor",
+                                                     "label":  "Bus factor (riesgo %)",
+                                                     "base_weight":  0.11627906976744186,
+                                                     "direction":  "baja",
+                                                     "pct_changed":  1.21,
+                                                     "rho":  0.9993,
+                                                     "mean_abs_diff":  0.689,
+                                                     "max_abs_diff":  2.013
+                                                 },
+                                                 {
+                                                     "weight":  "bus_factor",
+                                                     "label":  "Bus factor (riesgo %)",
+                                                     "base_weight":  0.11627906976744186,
+                                                     "direction":  "sube",
+                                                     "pct_changed":  0.88,
+                                                     "rho":  0.9994,
+                                                     "mean_abs_diff":  0.658,
+                                                     "max_abs_diff":  1.921
+                                                 }
+                                             ],
+                               "monte_carlo":  {
+                                                   "runs":  1000,
+                                                   "median_pct_changed":  1.97,
+                                                   "p95_pct_changed":  3.84,
+                                                   "worst_pct_changed":  4.93,
+                                                   "min_rho":  0.9964
+                                               },
+                               "most_sensitive":  {
+                                                      "label":  "Complejidad ciclomÃ¡tica",
+                                                      "direction":  "baja",
+                                                      "pct_changed":  3.07
+                                                  }
+                           },
+    "note":  "Spearman correlaciona cada mÃ©trica con el puntaje de riesgo (que a su vez se calcula con estas mÃ©tricas), por lo que una correlaciÃ³n alta es esperable; se reporta para documentar la contribuciÃ³n de cada mÃ©trica. La complejidad cognitiva y el churn en lÃ­neas no forman parte de la fÃ³rmula, por lo que su relaciÃ³n con el puntaje no es circular.",
+    "repositories":  [
+                         {
+                             "repo_url":  "https://github.com/psf/black",
+                             "modules":  364,
+                             "total_commits":  2358
+                         },
+                         {
+                             "repo_url":  "https://github.com/psf/requests",
+                             "modules":  37,
+                             "total_commits":  6495
+                         },
+                         {
+                             "repo_url":  "https://github.com/encode/starlette",
+                             "modules":  84,
+                             "total_commits":  1756
+                         },
+                         {
+                             "repo_url":  "https://github.com/pallets/itsdangerous",
+                             "modules":  15,
+                             "total_commits":  677
+                         },
+                         {
+                             "repo_url":  "https://github.com/Delgan/loguru",
+                             "modules":  173,
+                             "total_commits":  1058
+                         },
+                         {
+                             "repo_url":  "https://github.com/jazzband/prettytable",
+                             "modules":  15,
+                             "total_commits":  836
+                         },
+                         {
+                             "repo_url":  "https://github.com/jazzband/tablib",
+                             "modules":  33,
+                             "total_commits":  1246
+                         },
+                         {
+                             "repo_url":  "https://github.com/python-poetry/cleo",
+                             "modules":  136,
+                             "total_commits":  596
+                         },
+                         {
+                             "repo_url":  "https://github.com/ishepard/pydriller",
+                             "modules":  55,
+                             "total_commits":  924
+                         }
+                     ],
+    "failed":  [
+
+               ],
+    "repo_url":  "multi:https://github.com/psf/black,https://github.com/psf/requests,https://github.com/encode/starlette,https://github.com/pallets/itsdangerous,https://github.com/Delgan/loguru,https://github.com/jazzband/prettytable,https://github.com/jazzband/tablib,https://github.com/python-poetry/cleo,https://github.com/ishepard/pydriller",
+    "saved":  true
+}

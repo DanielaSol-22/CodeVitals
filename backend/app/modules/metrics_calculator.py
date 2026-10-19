@@ -3,6 +3,11 @@ Calculador de Métricas de Código usando Lizard
 Extrae complejidad ciclomática, LOC, parámetros, etc.
 """
 import hashlib
+import multiprocessing
+import threading
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
+
 import lizard
 
 from app.modules.cognitive import cognitive_by_function
@@ -10,8 +15,51 @@ import os
 from typing import Dict, List, Any
 
 
+# Desde este numero de archivos se reparte el analisis entre varios procesos
+# (Lizard es Python puro: los hilos no ayudan por el GIL). Con pocos archivos
+# arrancar procesos cuesta mas de lo que ahorra.
+PARALLEL_MIN_FILES = 40
+_POOL: ProcessPoolExecutor | None = None
+_POOL_LOCK = threading.Lock()
+
+
+def _worker_count() -> int:
+    return max(1, min(8, (os.cpu_count() or 1)))
+
+
+def _get_pool() -> ProcessPoolExecutor:
+    global _POOL
+    with _POOL_LOCK:
+        if _POOL is None:
+            # spawn: seguro aunque el servidor ya tenga hilos en marcha
+            _POOL = ProcessPoolExecutor(max_workers=_worker_count(), mp_context=multiprocessing.get_context("spawn"))
+        return _POOL
+
+
+def _reset_pool() -> None:
+    global _POOL
+    with _POOL_LOCK:
+        if _POOL is not None:
+            _POOL.shutdown(wait=False, cancel_futures=True)
+            _POOL = None
+
+
+def _analyze_worker(file_path: str) -> Dict[str, Any]:
+    return MetricsCalculator().analyze_file(file_path, with_blocks=True)
+
+
 class MetricsCalculator:
     """Calcula métricas de código usando Lizard"""
+
+    def _analyze_paths(self, paths: List[str]) -> List[Dict[str, Any]]:
+        """Metricas de cada archivo, en el mismo orden. Paralelo si compensa; si falla, secuencial."""
+        if len(paths) >= PARALLEL_MIN_FILES and _worker_count() > 1:
+            try:
+                chunk = max(1, len(paths) // (_worker_count() * 4))
+                return list(_get_pool().map(_analyze_worker, paths, chunksize=chunk))
+            except (BrokenProcessPool, OSError, RuntimeError):
+                _reset_pool()
+        return [self.analyze_file(p, with_blocks=True) for p in paths]
 
     # Extensiones de archivo soportadas
     SUPPORTED_EXTENSIONS = {
@@ -52,7 +100,7 @@ class MetricsCalculator:
         """
         self.repo_path = repo_path
 
-    def analyze_file(self, file_path: str) -> Dict[str, Any]:
+    def analyze_file(self, file_path: str, with_blocks: bool = False) -> Dict[str, Any]:
         """
         Analiza un archivo individual
         Retorna: complejidad, LOC, funciones, etc.
@@ -125,9 +173,12 @@ class MetricsCalculator:
 
             # Duplicacion dentro del propio archivo (fallback cuando se analiza
             # un solo archivo sin contexto del resto del repositorio).
-            duplication_percent = self._file_duplication_percent(file_path)
+            # Con with_blocks se devuelven los hashes para que el calculo por repositorio
+            # no vuelva a leer el archivo (antes se leia y normalizaba dos veces).
+            blocks = self._file_blocks(file_path)
+            duplication_percent = self._duplication_percent(blocks)
 
-            return {
+            result_dict = {
                 'file': file_path,
                 'language': self.SUPPORTED_EXTENSIONS.get(ext, 'Unknown'),
                 'loc': result.nloc,
@@ -139,6 +190,9 @@ class MetricsCalculator:
                 'deficiencies': deficiencies,
                 'duplication_percent': duplication_percent
             }
+            if with_blocks:
+                result_dict['_blocks'] = blocks
+            return result_dict
 
         except Exception as e:
             return {
@@ -173,36 +227,30 @@ class MetricsCalculator:
         languages = {}
         skipped_files = []
 
-        # Recorrer directorio
+        # 1) Recorrer el directorio y reunir los archivos soportados
+        paths = []
         for root, dirs, files in os.walk(target_path):
             # Saltar directorios comunes
             dirs[:] = [d for d in dirs if d not in [
                 '.git', '__pycache__', 'node_modules', '.venv', 'venv',
                 'dist', 'build', '.pytest_cache', '.env'
             ]]
-
             for file in files:
                 file_path = os.path.join(root, file)
-                _, ext = os.path.splitext(file_path)
+                if os.path.splitext(file_path)[1] in self.SUPPORTED_EXTENSIONS:
+                    paths.append(file_path)
 
-                if ext in self.SUPPORTED_EXTENSIONS:
-                    try:
-                        metrics = self.analyze_file(file_path)
-
-                        if 'error' not in metrics:
-                            file_metrics.append(metrics)
-                            lang = metrics['language']
-                            languages[lang] = languages.get(lang, 0) + 1
-                        else:
-                            skipped_files.append({
-                                'file': file_path,
-                                'reason': metrics.get('error', 'Unknown error')
-                            })
-                    except Exception as e:
-                        skipped_files.append({
-                            'file': file_path,
-                            'reason': str(e)
-                        })
+        # 2) Analizar cada archivo (en varios procesos si hay muchos)
+        for file_path, metrics in zip(paths, self._analyze_paths(paths)):
+            if 'error' not in metrics:
+                file_metrics.append(metrics)
+                lang = metrics['language']
+                languages[lang] = languages.get(lang, 0) + 1
+            else:
+                skipped_files.append({
+                    'file': file_path,
+                    'reason': metrics.get('error', 'Unknown error')
+                })
 
         # Recalcular duplicacion considerando TODO el repositorio (no solo
         # dentro de cada archivo por separado) para mayor precision.
@@ -370,7 +418,7 @@ class MetricsCalculator:
             path = metrics.get('file')
             if not path:
                 continue
-            file_blocks_map[path] = self._file_blocks(path)
+            file_blocks_map[path] = metrics.pop('_blocks', None) or self._file_blocks(path)
 
         block_counts: Dict[str, int] = {}
         for blocks in file_blocks_map.values():

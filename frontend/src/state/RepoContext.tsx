@@ -46,7 +46,7 @@ async function fetchRepo(path: string): Promise<RepoData> {
   const detail = new Map(normalizePriority(repoRaw).map((m) => [m.path, m]))
   modules = modules.map((m) => {
     const d = detail.get(m.path)
-    return d ? { ...m, cc: d.cc, churn: d.churn, busFactor: d.busFactor, actions: m.actions.length ? m.actions : d.actions } : m
+    return d ? { ...m, cc: d.cc, churn: d.churn, busFactor: d.busFactor, actions: m.actions.length ? m.actions : d.actions, deficiencyList: m.deficiencyList?.length ? m.deficiencyList : d.deficiencyList } : m
   })
   if (summary.totalModules === 0) summary.totalModules = modules.length
   // Si la API no entrega promedios por componente, se calculan con los módulos recibidos.

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useRepo } from '../state/RepoContext'
 import { PageHeader } from '../components/PageHeader'
 import { StatusBanner } from '../components/StatusBanner'
-import { ScoreRing } from '../components/ScoreRing'
+import { RiskMap } from '../components/RiskMap'
 import { KpiCard } from '../components/KPICard'
 import { Icon } from '../components/Icon'
 import { useToast } from '../components/Toast'
@@ -99,7 +99,7 @@ export default function Inicio() {
         right={
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" disabled={status === 'loading'} onClick={() => void analyze(repoPath)} className="cv-btn">
-              <Icon name="trend" size={15} />Volver a analizar
+              <Icon name="play" size={13} />Correr Análisis
             </button>
             <button type="button" onClick={() => toast.push('success', `Se descargó ${exportCsv(modules, s.name)}`)} className="cv-btn-primary">
               <Icon name="download" size={15} />Exportar CSV
@@ -116,21 +116,30 @@ export default function Inicio() {
         {s.commits !== null && <><span aria-hidden="true" className="text-line">|</span><span><b className="font-semibold text-ink tabular-nums">{s.commits.toLocaleString('es-GT')}</b> commits</span></>}
       </p>
 
-      <section aria-label="Indicadores principales" className="grid grid-cols-2 gap-4 lg:grid-cols-[1.2fr_1fr_1fr_1fr_1.1fr]">
-        <div className="cv-card col-span-2 flex flex-col items-center gap-3 lg:col-span-1">
-          <div className="flex w-full items-center justify-between gap-2">
-            <span className="cv-label">Riesgo global</span>
-            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${LEVEL_CLASS[level].pill}`}>
-              <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${LEVEL_CLASS[level].dot}`} />{LEVEL_LABEL[level]}
-            </span>
+      <section aria-label="Riesgo global" className="cv-card flex flex-col gap-5">
+        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
+          <div className="flex items-end gap-4">
+            <span className="font-display text-[5.5rem] font-extrabold leading-[0.85] tabular-nums" style={{ color: scoreText(s.avgScore) }}>{Math.round(s.avgScore)}</span>
+            <div className="flex flex-col gap-1.5 pb-1">
+              <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${LEVEL_CLASS[level].pill}`}>
+                <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${LEVEL_CLASS[level].dot}`} />Riesgo global {LEVEL_LABEL[level].toLowerCase()}
+              </span>
+              <span className="text-[13px]">
+                {trend && trend.direction !== 'flat'
+                  ? <span className={`font-semibold ${deltaClass}`}>{trend.direction === 'up' ? '↑ +' : '↓ '}{trend.delta} <span className="font-normal text-muted">vs. análisis anterior</span></span>
+                  : <span className="text-muted">{trend ? 'Sin cambios vs. análisis anterior' : 'Sin análisis previo para comparar'}</span>}
+              </span>
+            </div>
           </div>
-          <ScoreRing score={s.avgScore} />
-          <div className="w-full border-t border-line pt-3 text-[13px]">
-            {trend && trend.direction !== 'flat'
-              ? <span className={`font-semibold ${deltaClass}`}>{trend.direction === 'up' ? '↑ +' : '↓ '}{trend.delta} <span className="font-normal text-muted">vs. análisis anterior</span></span>
-              : <span className="text-muted">{trend ? 'Sin cambios vs. análisis anterior' : 'Sin análisis previo para comparar'}</span>}
-          </div>
+          <p className="max-w-[44ch] text-sm text-soft">{s.highCount > 0 ? `${s.highCount} ${s.highCount === 1 ? 'módulo requiere' : 'módulos requieren'} atención inmediata.` : 'Ningún módulo está en riesgo alto.'} Cada rectángulo es un módulo: más grande significa más líneas, más intenso significa más riesgo.</p>
         </div>
+        <RiskMap modules={modules} />
+        <ul className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-soft">
+          {dist.map(([l, , n]) => <li key={l} className="inline-flex items-center gap-1.5"><span aria-hidden="true" className={`h-2.5 w-2.5 rounded-sm ${LEVEL_CLASS[l].dot}`} />{LEVEL_LABEL[l]} · {n}</li>)}
+        </ul>
+      </section>
+
+      <section aria-label="Indicadores principales" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiCard label="Módulos" value={String(s.totalModules)} icon="cube" color="var(--color-brand)" sub="analizados" trend={s.trends.modules} trendGood />
         <KpiCard label="Deficiencias" value={String(s.totalDeficiencies)} icon="bug" color="var(--color-risk-high)" sub="detectadas" trend={s.trends.deficiencies} trendGood={false} />
         <KpiCard label="Alto riesgo" value={String(s.highCount)} icon="warn" color="var(--color-risk-med)" sub="requieren revisión" trend={s.trends.high} trendGood={false} />
@@ -270,7 +279,7 @@ export default function Inicio() {
                       <Link to={`/modulos?modulo=${encodeURIComponent(m.path)}`} className="flex items-center gap-3 rounded-lg border border-line px-3 py-2.5 transition-colors hover:border-brand hover:bg-table">
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[13px] font-bold tabular-nums" style={{ color: scoreText(m.score), background: `color-mix(in srgb, ${scoreColor(m.score)} 16%, transparent)` }}>{i + 1}</span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate font-mono text-[13px] font-medium">{m.path}</span>
+                          <span className="font-code block truncate text-[13px] font-medium">{m.path}</span>
                           <span className="block text-xs text-muted">Puntaje {Math.round(m.score)}{f && ` · pesa más: ${FACTOR_LABEL[f].toLowerCase()}`}</span>
                         </span>
                         <Icon name="chevR" size={15} strokeWidth={2} className="shrink-0 text-muted" />

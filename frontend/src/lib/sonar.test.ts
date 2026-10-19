@@ -50,3 +50,16 @@ describe('normalizadores', () => {
     expect(c.totals.debtMinutes).toBe(340)
   })
 })
+
+describe('normalizeToolsCompare', () => {
+  it('aplana scc y Radon en filas y reporta errores', async () => {
+    const { normalizeToolsCompare } = await import('./sonar')
+    const r = normalizeToolsCompare({ tools: [
+      { tool: 'scc', scope: 'todos los lenguajes', files: 12, error: null, agreement: [{ metric: 'Líneas de código', n: 12, rho: 0.99, p_value: 0.0001, note: null }] },
+      { tool: 'Radon', scope: 'solo Python', files: 0, error: 'falló', agreement: [] },
+    ] })
+    expect(r.rows).toHaveLength(1)
+    expect(r.rows[0]).toMatchObject({ tool: 'scc', files: 12, rho: 0.99 })
+    expect(r.errors).toEqual([{ tool: 'Radon', error: 'falló' }])
+  })
+})

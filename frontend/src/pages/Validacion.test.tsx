@@ -27,10 +27,11 @@ describe('Validación', () => {
     expect(run).toBeDisabled()
     await userEvent.type(screen.getByLabelText(/repositorios a analizar/i), 'https://github.com/a/b')
     await userEvent.click(run)
-    expect(await screen.findByText('Correlación de Spearman')).toBeInTheDocument()
+    expect(await screen.findByText('Cada métrica contra el riesgo')).toBeInTheDocument()
     expect(apiClient.validateRepos).toHaveBeenCalledWith(['https://github.com/a/b'], 0.05)
     expect(screen.getByText('Nota de prueba')).toBeInTheDocument()
-    expect(screen.getByText(/frecuencias bajas/)).toBeInTheDocument()
+    expect(screen.getByText('Ver detalle completo')).toBeInTheDocument()
+    expect(screen.getAllByText(/frecuencias bajas/).length).toBeGreaterThan(0)
   })
 
   it('muestra el error de la API', async () => {

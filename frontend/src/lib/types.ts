@@ -14,6 +14,17 @@ export interface CommitRef {
   when: string
 }
 
+export interface Deficiency {
+  type: string
+  label: string
+  /** Función donde se detectó (puede faltar). */
+  fn: string
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM'
+  value: number | null
+  detail: string
+  advice: string
+}
+
 export type RecPriority = 'ALTA' | 'MEDIA' | 'BAJA'
 
 export interface Recommendation {
@@ -32,6 +43,8 @@ export interface ModuleRow {
   loc: number
   busFactor: number
   deficiencies: number
+  /** Detalle de cada deficiencia (qué función y por qué); vacío si la API no lo envía. */
+  deficiencyList?: Deficiency[]
   /** Complejidad cognitiva (solo Python; null en otros lenguajes). */
   cognitive?: number | null
   /** Líneas agregadas y eliminadas (code churn). `churn` es la frecuencia: número de commits. */

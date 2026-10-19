@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Modulos from './Modulos'
+import { CommandBar } from '../components/CommandBar'
 import { renderWithProviders } from '../test/renderApp'
 
 vi.mock('../lib/api', async (orig) => ({
@@ -10,16 +11,17 @@ vi.mock('../lib/api', async (orig) => ({
 }))
 
 const bodyRows = () => within(screen.getAllByRole('rowgroup')[1]).getAllByRole('row')
+const view = (route = '/modulos') => renderWithProviders(<><CommandBar /><Modulos /></>, route)
 
 describe('Módulos', () => {
   it('muestra la primera página de 10 y el total', () => {
-    renderWithProviders(<Modulos />)
+    view()
     expect(bodyRows()).toHaveLength(10)
     expect(screen.getByText(/de 38/)).toBeInTheDocument()
   })
 
   it('filtra por búsqueda', async () => {
-    renderWithProviders(<Modulos />)
+    view()
     await userEvent.type(screen.getByRole('searchbox', { name: /buscar módulo/i }), 'billing')
     const rows = await screen.findAllByRole('row')
     expect(rows.some((r) => r.textContent?.includes('billing_engine.py'))).toBe(true)
@@ -27,13 +29,13 @@ describe('Módulos', () => {
   })
 
   it('lee el nivel de riesgo desde la URL', () => {
-    renderWithProviders(<Modulos />, '/modulos?nivel=HIGH')
+    view('/modulos?nivel=HIGH')
     expect(bodyRows()).toHaveLength(6)
     expect(screen.getByText(/de 6/)).toBeInTheDocument()
   })
 
   it('filtra con los chips de nivel y muestra los conteos', async () => {
-    renderWithProviders(<Modulos />)
+    view()
     expect(screen.getByRole('button', { name: /todos \(38\)/i })).toHaveAttribute('aria-pressed', 'true')
     await userEvent.click(screen.getByRole('button', { name: /alto \(6\)/i }))
     expect(screen.getByText(/de 6/)).toBeInTheDocument()
@@ -42,7 +44,7 @@ describe('Módulos', () => {
   })
 
   it('abre el detalle con foco en Cerrar y lo cierra con Escape', async () => {
-    renderWithProviders(<Modulos />)
+    view()
     await userEvent.click(screen.getAllByRole('button', { name: /billing_engine/ })[0])
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByRole('button', { name: 'Cerrar' })).toHaveFocus()

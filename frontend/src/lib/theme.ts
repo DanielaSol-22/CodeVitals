@@ -6,7 +6,7 @@ export function readTheme(): Theme {
     const v = localStorage.getItem(KEY)
     if (v === 'light' || v === 'dark') return v
   } catch { /* almacenamiento no disponible */ }
-  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  return 'dark' // el tema oscuro es el predeterminado
 }
 
 export function applyTheme(t: Theme): void {

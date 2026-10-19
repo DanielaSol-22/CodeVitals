@@ -120,3 +120,24 @@ export function formatDebt(minutes: number | null | undefined): string {
   const d = Math.floor(h / 8) // Sonar cuenta un día = 8 horas
   return h % 8 ? `${d} d ${h % 8} h` : `${d} d`
 }
+
+export interface ToolAgreement extends SonarAgreement { tool: string; scope: string; files: number }
+export interface ToolError { tool: string; error: string }
+
+/** Respuesta de /tools/compare (scc y Radon) con la misma forma que la de SonarQube, para una sola tabla. */
+export function normalizeToolsCompare(raw: any): { rows: ToolAgreement[]; errors: ToolError[] } {
+  const rows: ToolAgreement[] = []
+  const errors: ToolError[] = []
+  for (const t of Array.isArray(raw?.tools) ? raw.tools : []) {
+    const tool = String(t?.tool ?? '')
+    if (typeof t?.error === 'string' && t.error) errors.push({ tool, error: t.error })
+    for (const a of Array.isArray(t?.agreement) ? t.agreement : []) {
+      rows.push({
+        tool, scope: String(t?.scope ?? ''), files: Number(t?.files ?? 0),
+        metric: String(a.metric ?? ''), n: Number(a.n ?? 0),
+        rho: num(a.rho), pValue: num(a.p_value), note: typeof a.note === 'string' ? a.note : null,
+      })
+    }
+  }
+  return { rows, errors }
+}

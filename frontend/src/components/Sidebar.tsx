@@ -4,37 +4,30 @@ import { NAV } from './nav'
 import { useRepo } from '../state/RepoContext'
 import { ThemeToggle } from './ThemeToggle'
 
-function ApiDot({ online }: { online: boolean | null }) {
+export function ApiDot({ online }: { online: boolean | null }) {
   const tone = online ? 'bg-risk-low-bar' : online === false ? 'bg-risk-high-bar' : 'bg-muted'
   return <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${tone}`} />
 }
 
-export function Brand() {
+export function Brand({ collapsed = false }: { collapsed?: boolean }) {
   return (
     <div className="flex items-center gap-2.5">
-      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand text-on-brand">
-        <Icon name="code" size={19} strokeWidth={2.1} />
-      </div>
-      <div>
-        <div className="text-[15px] font-bold leading-tight tracking-tight">CodeVitals</div>
-        <div className="text-xs leading-tight text-muted">Mantenibilidad del código</div>
-      </div>
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true" className="shrink-0">
+        <rect width="32" height="32" rx="8" style={{ fill: 'var(--color-brand)' }} />
+        <path d="M5 17h5l3-8 4 15 3-9 1.5 2H27" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ stroke: 'var(--color-on-brand)' }} />
+      </svg>
+      {!collapsed && <div className="font-display text-[1.2rem] font-extrabold leading-none">CodeVitals</div>}
     </div>
   )
 }
 
+/** Formulario del repositorio para móvil (en escritorio se usa la barra de comandos). */
 export function RepoField({ compact = false }: { compact?: boolean }) {
   const { repoPath, setRepoPath, analyze, status, recent } = useRepo()
   const fieldId = compact ? 'repo-m' : 'repo'
   const listId = compact ? 'recent-repos-m' : 'recent-repos'
   return (
-    <form
-      className="flex flex-col gap-2"
-      onSubmit={(e) => {
-        e.preventDefault()
-        void analyze()
-      }}
-    >
+    <form className="flex flex-col gap-2" onSubmit={(e) => { e.preventDefault(); void analyze() }}>
       <label htmlFor={fieldId} className="cv-label">Repositorio</label>
       <input
         id={fieldId}
@@ -46,38 +39,29 @@ export function RepoField({ compact = false }: { compact?: boolean }) {
       />
       <datalist id={listId}>{recent.map((r) => <option key={r} value={r} />)}</datalist>
       <button disabled={status === 'loading'} className="cv-btn-primary w-full">
-        <Icon name="search" size={15} strokeWidth={2.2} />{status === 'loading' ? 'Analizando…' : 'Analizar'}
+        <Icon name="play" size={14} />{status === 'loading' ? 'Ejecutando…' : 'Ejecutar Diagnóstico'}
       </button>
     </form>
   )
 }
 
-export function Sidebar() {
-  const { apiOnline, modules, isEmpty } = useRepo()
+/** Dock flotante de navegación (escritorio). En móvil se usa MobileTabBar. */
+export function Dock() {
+  const { modules, isEmpty } = useRepo()
   return (
-    <aside className="sticky top-0 hidden h-screen w-[256px] shrink-0 flex-col border-r border-line bg-surface p-4 lg:flex">
-      <div className="px-1 pb-6 pt-1"><Brand /></div>
-      <nav aria-label="Principal" className="flex flex-col gap-0.5">
-        {NAV.map((n) => (
-          <NavLink
-            key={n.to}
-            to={n.to}
-            end={n.to === '/'}
-            className={({ isActive }) => `flex min-h-10 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${isActive ? 'bg-nav-active font-semibold text-brand' : 'text-soft hover:bg-canvas hover:text-ink'}`}
-          >
-            <Icon name={n.icon} size={18} />
-            <span className="flex-1">{n.label}</span>
-            {n.to === '/modulos' && !isEmpty && <span className="text-xs tabular-nums text-muted">{modules.length}</span>}
-          </NavLink>
-        ))}
-      </nav>
-      <div className="flex-1" />
-      <div className="border-t border-line pt-4"><RepoField /></div>
-      <div className="mt-3"><ThemeToggle /></div>
-      <div role="status" className="mt-3 flex items-center gap-2 px-1 text-xs text-muted">
-        <ApiDot online={apiOnline} />
-        {apiOnline ? 'API conectada' : apiOnline === false ? 'API sin conexión' : 'Comprobando API…'}
-      </div>
-    </aside>
+    <nav aria-label="Principal" className="fixed bottom-5 left-1/2 z-30 hidden -translate-x-1/2 items-center gap-1 rounded-full border border-line bg-panel p-1.5 shadow-pop lg:flex">
+      {NAV.map((n) => (
+        <NavLink
+          key={n.to}
+          to={n.to}
+          end={n.to === '/'}
+          className={({ isActive }) => `flex min-h-10 items-center gap-2 rounded-full px-4 text-sm transition-colors ${isActive ? 'bg-brand font-semibold text-on-brand' : 'font-medium text-soft hover:bg-table hover:text-ink'}`}
+        >
+          <Icon name={n.icon} size={17} />
+          {n.label}
+          {n.to === '/modulos' && !isEmpty && <span className="text-xs tabular-nums opacity-70">{modules.length}</span>}
+        </NavLink>
+      ))}
+    </nav>
   )
 }

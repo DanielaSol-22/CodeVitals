@@ -6,6 +6,7 @@ Estas son las rutas que consume el frontend (Dashboard, ModuleAnalysis, Priority
   POST /api/v1/risk/priority
 """
 import os
+from concurrent.futures import ThreadPoolExecutor
 import threading
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -16,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import models, security
 from app.config import get_settings
 from app.database import get_db
+from app.modules.deficiency_info import describe_deficiencies
 from app.modules.git_analyzer import GitAnalyzer
 from app.modules.metrics_calculator import MetricsCalculator
 from app.modules.risk_detector import RiskDetector
@@ -171,14 +173,22 @@ def _analyze_uncached_unlimited(repo_url: str, repo_path: str | None) -> tuple[l
     # Debe ejecutarse ANTES de leer el directorio con MetricsCalculator,
     # o la carpeta todavia estara vacia. De paso, nos da el total de commits
     # del repositorio (requisito de historial minimo).
-    bus_factor = git.calculate_bus_factor()
+    # Clonado (si hace falta) y, en paralelo, historial de Git + metricas de codigo:
+    # son independientes entre si y antes corrian una tras otra.
+    try:
+        git._ensure_cloned()
+    except Exception:
+        pass  # el error real lo informa calculate_bus_factor() mas abajo
+    with ThreadPoolExecutor(max_workers=1) as ex:
+        bus_future = ex.submit(git.calculate_bus_factor)
+        code_result = MetricsCalculator().analyze_repository(cloned_dir)
+        bus_factor = bus_future.result()
     if "error" in bus_factor and not os.path.isdir(cloned_dir):
         # El clonado fallo (repo privado, inexistente...): se informa el motivo real.
         raise HTTPException(status_code=400, detail=bus_factor["error"])
     bus_factor_risk = bus_factor.get("risk_percentage", 0) if "error" not in bus_factor else 0
     repo_total_commits = bus_factor.get("total_commits", 0) if "error" not in bus_factor else 0
 
-    code_result = MetricsCalculator().analyze_repository(cloned_dir)
     if "error" in code_result:
         raise HTTPException(status_code=400, detail=code_result.get("message", code_result["error"]))
 
@@ -228,7 +238,9 @@ async def risk_repository(payload: RiskRepositoryRequest, db: AsyncSession = Dep
             "risk_score": m["risk_analysis"]["risk_score"],
             "classification": m["risk_analysis"]["classification"],
             "deficiency_count": len(m["code_metrics"].get("deficiencies", [])),
+            "deficiencies": describe_deficiencies(m["code_metrics"].get("deficiencies", [])),
             "cyclomatic_complexity": m["code_metrics"].get("cyclomatic_complexity", 0),
+            "loc": m["code_metrics"].get("lines_of_code", 0),
             "churn_commits": m["git_metrics"].get("commits", 0),
             "modification_frequency": m["git_metrics"].get("modification_frequency", 0),
             "code_churn_lines": m["git_metrics"].get("code_churn", 0),
@@ -351,6 +363,7 @@ def risk_priority(payload: RiskRepositoryRequest):
 
     priority = _risk_detector.generate_priority_list(repo_analysis, payload.limit)
     recs_by_file = {m["file"]: m.get("recommendations", []) for m in modules}
+    defs_by_file = {m["file"]: describe_deficiencies(m.get("code_metrics", {}).get("deficiencies", [])) for m in modules}
 
     return {
         "modules": [
@@ -359,6 +372,7 @@ def risk_priority(payload: RiskRepositoryRequest):
                 "risk_score": p["risk_score"],
                 "classification": p["classification"],
                 "deficiency_count": p["deficiencies_count"],
+                "deficiencies": defs_by_file.get(p["file"], []),
                 "recommended_actions": [r["action"] for r in recs_by_file.get(p["file"], [])] or [p["action"]],
                 "recommendations": recs_by_file.get(p["file"], []),
             }

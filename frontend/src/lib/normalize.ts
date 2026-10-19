@@ -1,4 +1,4 @@
-import type { ComponentScores, ModuleRow, Recommendation, RepoSummary, RiskLevel } from './types'
+import type { ComponentScores, Deficiency, ModuleRow, Recommendation, RepoSummary, RiskLevel } from './types'
 import { levelFromScore } from './risk'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -48,6 +48,23 @@ export function normalizeRecommendations(raw: unknown): Recommendation[] {
     }))
 }
 
+const SEVERITIES = ['CRITICAL', 'HIGH', 'MEDIUM']
+
+export function normalizeDeficiencies(raw: unknown): Deficiency[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .filter((d): d is Raw => typeof d === 'object' && d !== null)
+    .map((d) => ({
+      type: String(d.type ?? ''),
+      label: String(d.label ?? d.type ?? 'Deficiencia'),
+      fn: typeof d.function === 'string' ? d.function : '',
+      severity: (SEVERITIES.includes(String(d.severity)) ? String(d.severity) : 'MEDIUM') as Deficiency['severity'],
+      value: typeof d.value === 'number' ? d.value : null,
+      detail: String(d.detail ?? d.description ?? ''),
+      advice: String(d.advice ?? ''),
+    }))
+}
+
 export function normalizeModule(raw: Raw): ModuleRow {
   const score = num(pick(raw, 'risk_score', 'score', 'risk'))
   const code = pick(raw, 'code_metrics', 'metrics') ?? {}
@@ -67,6 +84,7 @@ export function normalizeModule(raw: Raw): ModuleRow {
     cognitive: (() => { const v = pick(raw, 'cognitive_complexity') ?? pick(code, 'cognitive_complexity'); return typeof v === 'number' ? v : null })(),
     churnLines: num(pick(raw, 'code_churn_lines', 'churn_lines') ?? pick(git, 'churn_lines', 'code_churn')),
     deficiencies: Array.isArray(defs) ? defs.length : num(defs),
+    deficiencyList: normalizeDeficiencies(defs),
     scores: toScores(raw),
     actions: Array.isArray(actions) ? actions.map(String) : [],
     justification: typeof raw.justification === 'string' ? raw.justification : undefined,

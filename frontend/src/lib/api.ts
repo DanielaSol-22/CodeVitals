@@ -46,6 +46,10 @@ export const apiClient = {
     const { data } = await http.get('/api/v1/sonar/measures', { params: { project_key: projectKey }, timeout: 60000 })
     return data
   },
+  async toolsCompare(repoUrl: string): Promise<any> {
+    const { data } = await http.post('/api/v1/tools/compare', { repo_url: repoUrl }, { timeout: 30 * 60 * 1000 })
+    return data
+  },
   async sonarCompare(repoUrl: string, projectKey: string): Promise<any> {
     const { data } = await http.post('/api/v1/sonar/compare', { repo_url: repoUrl, project_key: projectKey }, { timeout: 30 * 60 * 1000 })
     return data

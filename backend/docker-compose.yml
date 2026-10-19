@@ -48,7 +48,7 @@ services:
     container_name: codevitals_frontend
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8080:80"
+      - "${WEB_BIND:-127.0.0.1}:8080:80"
     depends_on:
       - api
 

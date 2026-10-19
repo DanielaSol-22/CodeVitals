@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.database import init_db
 from app.security import require_api_key
-from app.routers import git_analysis, metrics, risk, sonar, statistics, system
+from app.routers import git_analysis, metrics, risk, sonar, statistics, system, tools
 
 settings = get_settings()
 
@@ -52,6 +52,7 @@ def create_app() -> FastAPI:
     app.include_router(risk.router, dependencies=protected)
     app.include_router(statistics.router, dependencies=protected)
     app.include_router(sonar.router, dependencies=protected)
+    app.include_router(tools.router, dependencies=protected)
 
     return app
 

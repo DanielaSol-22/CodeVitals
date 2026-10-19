@@ -7,28 +7,31 @@
  * Pares de texto/fondo verificados con contraste >= 4.5:1 (AA) en ambos temas.
  */
 @theme {
+  --font-display: "Bricolage Grotesque", "IBM Plex Sans", system-ui, sans-serif;
   --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-code: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --shadow-card: 0 1px 2px rgba(15, 23, 32, 0.05);
+  --shadow-card: none;
   --shadow-pop: 0 12px 32px -8px rgba(15, 23, 32, 0.22);
 
   /* Superficies y texto */
-  --color-canvas: #f3f5f7;
+  --color-canvas: #f5f6fa;
   --color-surface: #ffffff;
-  --color-table: #f7f9fa;
-  --color-line: #dbe1e7;
-  --color-ink: #0f1720;
-  --color-soft: #364352;
-  --color-muted: #536173;
+  --color-panel: #ffffff;
+  --color-table: #f1f2f8;
+  --color-line: rgba(15, 23, 42, 0.13);
+  --color-ink: #0f1424;
+  --color-soft: #3a4157;
+  --color-muted: #575f78;
 
   /* Marca */
-  --color-brand: #0b6360;
-  --color-brand-50: #e5f2f1;
+  --color-brand: #5b3fd6;
+  --color-brand-50: rgba(91, 63, 214, 0.08);
   --color-on-brand: #ffffff;
 
   /* Texto sobre fondo de acento (hero, píldoras) */
-  --color-nav-active: #e5f2f1;
+  --color-nav-active: rgba(91, 63, 214, 0.08);
 
   /* Riesgo: color de texto/ícono, fondo suave, texto sobre fondo suave y color de relleno */
   --color-risk-low: #19794a;
@@ -50,7 +53,7 @@
   --color-chart-loc: #0a7d8c;
   --color-chart-duplication: #b6347f;
   --color-chart-busfactor: #5d6b7a;
-  --color-chart-line: #0b6360;
+  --color-chart-line: #5b3fd6;
 }
 
 :root[data-theme="dark"] {
@@ -58,29 +61,30 @@
   --shadow-card: none;
   --shadow-pop: 0 12px 32px -8px rgba(0, 0, 0, 0.6);
 
-  --color-canvas: #0b1016;
-  --color-surface: #131a22;
-  --color-table: #19222c;
-  --color-line: #2a3541;
-  --color-ink: #e9eef3;
-  --color-soft: #b9c4cf;
-  --color-muted: #94a2b1;
+  --color-canvas: #0b0f19;
+  --color-surface: rgba(255, 255, 255, 0.025);
+  --color-panel: #111726;
+  --color-table: rgba(255, 255, 255, 0.04);
+  --color-line: rgba(255, 255, 255, 0.09);
+  --color-ink: #e7eaf3;
+  --color-soft: #b6bdd0;
+  --color-muted: #8d96ad;
 
-  --color-brand: #4fd1c5;
-  --color-brand-50: #14302f;
-  --color-on-brand: #04201e;
-  --color-nav-active: #14302f;
+  --color-brand: #a597ff;
+  --color-brand-50: rgba(165, 151, 255, 0.12);
+  --color-on-brand: #0b0f19;
+  --color-nav-active: rgba(165, 151, 255, 0.08);
 
   --color-risk-low: #5fd394;
-  --color-risk-low-bg: #12301f;
+  --color-risk-low-bg: rgba(63, 185, 121, 0.12);
   --color-risk-low-fg: #8be4b2;
   --color-risk-low-bar: #3fb979;
   --color-risk-med: #f0b44a;
-  --color-risk-med-bg: #35270a;
+  --color-risk-med-bg: rgba(224, 160, 43, 0.12);
   --color-risk-med-fg: #f6cb7c;
   --color-risk-med-bar: #e0a02b;
   --color-risk-high: #f27d7d;
-  --color-risk-high-bg: #3a1618;
+  --color-risk-high-bg: rgba(232, 99, 99, 0.13);
   --color-risk-high-fg: #f7a3a3;
   --color-risk-high-bar: #e86363;
 
@@ -89,7 +93,7 @@
   --color-chart-loc: #4fc8d8;
   --color-chart-duplication: #ef8bc3;
   --color-chart-busfactor: #a8b5c2;
-  --color-chart-line: #4fd1c5;
+  --color-chart-line: #a597ff;
 }
 
 /* Tailwind 4 usa currentColor por defecto en los bordes: se fija al token de línea. */
@@ -101,7 +105,7 @@
 }
 
 @layer components {
-  .cv-card { @apply min-w-0 rounded-xl border border-line bg-surface p-5 shadow-card; }
+  .cv-card { @apply min-w-0 rounded-[10px] border border-line bg-surface p-5; }
   .cv-table-wrap { @apply overflow-x-auto; }
   .cv-table { @apply w-full min-w-[520px] border-collapse text-[13px]; }
   .cv-th { @apply whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold text-muted; }
@@ -109,20 +113,32 @@
   .cv-tr { @apply border-b border-line last:border-0; }
   .cv-control { @apply rounded-lg border border-line bg-surface text-ink; }
   .cv-label { @apply text-xs font-medium text-muted; }
-  .cv-sticky { @apply sticky left-0 z-[1] bg-surface; }
+  .cv-sticky { @apply sticky left-0 z-[1] bg-panel; }
   .cv-sticky-head { @apply sticky left-0 z-[1] bg-table; }
-  .cv-eyebrow { @apply text-xs font-semibold uppercase tracking-[0.08em] text-muted; }
-  .cv-h2 { @apply text-base font-semibold tracking-tight; }
+  .cv-eyebrow { @apply text-xs font-medium text-muted; }
+  .cv-h2 { @apply font-display text-lg font-semibold tracking-tight; }
   .cv-btn { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-line bg-surface px-3.5 py-2 text-[13px] font-semibold text-ink transition-colors hover:border-brand hover:text-brand disabled:opacity-60; }
   .cv-btn-primary { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-on-brand transition-opacity hover:opacity-90 disabled:opacity-50; }
   .cv-seg { @apply flex rounded-lg bg-canvas p-1; }
-  .cv-seg-btn { @apply min-h-8 rounded-md px-3 py-1 text-[13px] font-semibold text-muted transition-colors hover:text-ink aria-selected:bg-surface aria-selected:text-ink aria-selected:shadow-card; }
+  .cv-seg-btn { @apply min-h-8 rounded-lg px-3 py-1 text-[13px] font-semibold text-muted transition-colors hover:text-ink aria-selected:bg-surface aria-selected:text-ink aria-selected:shadow-card; }
   .cv-chip { @apply min-h-9 rounded-full border border-line bg-surface px-3.5 py-1.5 text-[13px] font-semibold text-soft transition-colors hover:border-brand hover:text-brand aria-pressed:border-brand aria-pressed:bg-brand aria-pressed:text-on-brand aria-selected:border-brand aria-selected:bg-brand aria-selected:text-on-brand; }
   .cv-empty { @apply rounded-lg border border-dashed border-line bg-canvas px-4 py-10 text-center text-[13px] text-muted; }
 }
 
 html, body, #root { min-height: 100%; }
-body { @apply bg-canvas font-sans text-ink antialiased; margin: 0; font-feature-settings: "tnum" 0; }
+body {
+  @apply bg-canvas font-sans text-ink antialiased; margin: 0;
+}
+/* Fondo técnico: retícula de puntos tenue y un resplandor violeta arriba a la izquierda (solo tema oscuro). */
+:root[data-theme="dark"] body {
+  background-image:
+    radial-gradient(900px 420px at 8% -8%, rgba(120, 100, 255, 0.10), transparent 70%),
+    radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: auto, 22px 22px;
+  background-attachment: fixed;
+}
+.font-display { letter-spacing: -0.02em; }
+.font-code { font-family: var(--font-code); }
 .tabular-nums { font-variant-numeric: tabular-nums; }
 :focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
 input:focus-visible, textarea:focus-visible, select:focus-visible { outline-offset: 0; }

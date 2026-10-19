@@ -25,6 +25,10 @@ const PATHS = {
   menu: 'M4 7h16M4 12h16M4 17h16',
   stats: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
   check: 'M5 12l5 5 9-10',
+  play: 'M7 4.5v15l13-7.5z',
+  terminal: 'M4 17l6-5-6-5M12 19h8',
+  branch: 'M6 3v12M6 15a3 3 0 100 6 3 3 0 000-6zM18 9a3 3 0 100-6 3 3 0 000 6zM18 9c0 6-12 3-12 6',
+  panelL: 'M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zM9 5v14',
 } as const
 
 export type IconName = keyof typeof PATHS

@@ -181,7 +181,7 @@ class GitAnalyzer:
                 os.makedirs(self.repo_path, exist_ok=True)
                 try:
                     subprocess.run(
-                        ["git", "clone", "--quiet", self.repo_url, dest],
+                        ["git", "clone", "--quiet", "--no-tags", "--single-branch", self.repo_url, dest],
                         check=True, capture_output=True, text=True,
                         # sin esto, un repo privado/inexistente pide usuario y se queda colgado
                         env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
@@ -234,11 +234,13 @@ class GitAnalyzer:
         ).stdout
 
         # Una misma persona puede firmar con varios nombres o correos: se unifica antes de contar.
-        ids_out = subprocess.run(
-            ["git", "log", "--format=%an%x1f%ae", "HEAD"], cwd=dest, check=True,
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-        ).stdout
-        identity = resolve_identities([tuple(l.split("\x1f", 1)) for l in ids_out.splitlines() if "\x1f" in l])
+        # Los pares nombre/correo salen del mismo log (antes se ejecutaba un segundo `git log`).
+        pairs = []
+        for line in out.splitlines():
+            if line.startswith("@@\x1f"):
+                name, _, rest = line[3:].partition("\x1f")
+                pairs.append((name, rest.partition("\x1f")[0]))
+        identity = resolve_identities(pairs)
 
         author_commits: Dict[str, int] = defaultdict(int)
         author_files: Dict[str, set] = defaultdict(set)

@@ -1,0 +1,49 @@
+{
+  "python": "3.13.16",
+  "cpu_count": 2,
+  "rows": [
+    {
+      "repo": "prettytable",
+      "modules": 15,
+      "commits": 836,
+      "cold_s": 0.738,
+      "warm_ms": 2.46,
+      "ms_per_module": 49.2
+    },
+    {
+      "repo": "itsdangerous",
+      "modules": 15,
+      "commits": 677,
+      "cold_s": 0.198,
+      "warm_ms": 2.54,
+      "ms_per_module": 13.2
+    },
+    {
+      "repo": "cleo",
+      "modules": 136,
+      "commits": 596,
+      "cold_s": 0.931,
+      "warm_ms": 3.07,
+      "ms_per_module": 6.8
+    },
+    {
+      "repo": "loguru",
+      "modules": 173,
+      "commits": 1058,
+      "cold_s": 1.658,
+      "warm_ms": 2.81,
+      "ms_per_module": 9.6
+    },
+    {
+      "repo": "requests",
+      "modules": 37,
+      "commits": 6495,
+      "cold_s": 1.915,
+      "warm_ms": 3.71,
+      "ms_per_module": 51.8
+    }
+  ],
+  "concurrent3_s": 1.167,
+  "sequential3_s": 1.867,
+  "started": "2026-10-19 16:13:05"
+}

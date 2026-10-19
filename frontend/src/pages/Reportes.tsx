@@ -5,11 +5,11 @@ import { StatusBanner } from '../components/StatusBanner'
 import { Icon } from '../components/Icon'
 import { useToast } from '../components/Toast'
 import { RiskPill } from '../components/RiskPill'
-import { exportCsv, exportXlsx, fileStamp } from '../lib/export'
+import { exportCsv, exportPdf, exportXlsx, fileStamp } from '../lib/export'
 import { LEVEL_CLASS, LEVEL_LABEL } from '../lib/risk'
 import type { ModuleRow, RiskLevel } from '../lib/types'
 
-type Format = 'xlsx' | 'csv'
+type Format = 'xlsx' | 'csv' | 'pdf'
 type Scope = 'all' | 'top10'
 interface Entry { id: string; file: string; when: string; filters: string; fmt: Format; levels: RiskLevel[]; scope: Scope }
 
@@ -38,7 +38,7 @@ function describe(levels: RiskLevel[], scope: Scope): string {
 export default function Reportes() {
   const { modules, summary } = useRepo()
   const [levels, setLevels] = useState<RiskLevel[]>(LEVELS)
-  const [format, setFormat] = useState<Format>('xlsx')
+  const [format, setFormat] = useState<Format>('pdf')
   const [scope, setScope] = useState<Scope>('all')
   const [history, setHistory] = useState<Entry[]>(load)
   const [busy, setBusy] = useState(false)
@@ -47,8 +47,9 @@ export default function Reportes() {
   const picked = useMemo(() => select(modules, levels, scope), [modules, levels, scope])
   const avg = picked.length ? Math.round(picked.reduce((a, m) => a + m.score, 0) / picked.length) : 0
   const high = picked.filter((m) => m.level === 'HIGH').length
+  const defs = picked.reduce((a, m) => a + m.deficiencies, 0)
 
-  const run = async (mods: ModuleRow[], fmt: Format): Promise<string> => (fmt === 'csv' ? exportCsv(mods, summary.name) : exportXlsx(mods, summary.name))
+  const run = async (mods: ModuleRow[], fmt: Format): Promise<string> => (fmt === 'csv' ? exportCsv(mods, summary.name) : fmt === 'pdf' ? exportPdf(mods, summary.name) : exportXlsx(mods, summary.name))
 
   async function generate() {
     if (picked.length === 0) {
@@ -74,7 +75,7 @@ export default function Reportes() {
 
   return (
     <>
-      <PageHeader section="reportes" title="Reportes" subtitle="Genera y exporta el estado de mantenibilidad del repositorio en CSV o Excel." />
+      <PageHeader section="reportes" title="Reportes" subtitle="Genera un informe del estado de mantenibilidad del repositorio, con las deficiencias de cada módulo." />
       <StatusBanner />
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
@@ -98,10 +99,11 @@ export default function Reportes() {
           </fieldset>
           <fieldset>
             <legend className="mb-2 text-xs font-semibold text-soft">Formato</legend>
-            <div className="grid grid-cols-2 gap-2">
-              {([['xlsx', 'Excel (.xlsx)'], ['csv', 'CSV (.csv)']] as const).map(([v, label]) => (
-                <label key={v} className={`cursor-pointer rounded-lg border px-2 py-2.5 text-center has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand text-xs font-semibold ${format === v ? 'border-brand bg-brand-50 text-brand' : 'border-line text-soft'}`}>
-                  <input type="radio" name="formato" value={v} checked={format === v} onChange={() => setFormat(v)} className="sr-only" />{label}
+            <div className="grid grid-cols-1 gap-2">
+              {([['pdf', 'Informe (PDF)', 'Para leer o entregar'], ['xlsx', 'Excel (.xlsx)', 'Resumen, módulos y deficiencias'], ['csv', 'CSV (.csv)', 'Datos planos']] as const).map(([v, label, hint]) => (
+                <label key={v} className={`cursor-pointer rounded-lg border px-3 py-2.5 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand text-xs ${format === v ? 'border-brand bg-brand-50 text-brand' : 'border-line text-soft'}`}>
+                  <input type="radio" name="formato" value={v} checked={format === v} onChange={() => setFormat(v)} className="sr-only" />
+                  <span className="block font-semibold">{label}</span><span className="block text-xs font-normal text-muted">{hint}</span>
                 </label>
               ))}
             </div>
@@ -112,8 +114,8 @@ export default function Reportes() {
         </section>
 
         <section className="flex min-w-0 flex-1 flex-col gap-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {[['Módulos en el reporte', String(picked.length), 'text-ink'], ['Alto riesgo', String(high), 'text-risk-high-fg'], ['Riesgo promedio', String(avg), 'text-risk-med-fg']].map(([l, v, c]) => (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[['Módulos en el reporte', String(picked.length), 'text-ink'], ['Alto riesgo', String(high), 'text-risk-high-fg'], ['Riesgo promedio', String(avg), 'text-risk-med-fg'], ['Deficiencias', String(defs), 'text-ink']].map(([l, v, c]) => (
               <div key={l} className="cv-card px-3.5 py-3"><div className="text-xs text-soft">{l}</div><div className={`mt-0.5 text-2xl font-bold ${c}`}>{v}</div></div>
             ))}
           </div>
@@ -126,16 +128,17 @@ export default function Reportes() {
                   <th scope="col" className="cv-th">Riesgo</th>
                   <th scope="col" className="cv-th" title="Complejidad ciclomática">CC</th>
                   <th scope="col" className="cv-th">Cambios</th>
+                  <th scope="col" className="cv-th">Deficiencias</th>
                   <th scope="col" className="cv-th">Puntaje</th>
                 </tr></thead>
                 <tbody>
                   {picked.slice(0, 6).map((m) => (
                     <tr key={m.path} className="cv-tr">
                       <td className="cv-sticky cv-td max-w-[260px] truncate">{m.path}</td><td className="cv-td"><RiskPill level={m.level} /></td>
-                      <td className="cv-td tabular-nums">{m.cc}</td><td className="cv-td tabular-nums">{m.churn}</td><td className="cv-td font-semibold tabular-nums">{m.score}</td>
+                      <td className="cv-td tabular-nums">{m.cc}</td><td className="cv-td tabular-nums">{m.churn}</td><td className="cv-td tabular-nums">{m.deficiencies}</td><td className="cv-td font-semibold tabular-nums">{m.score}</td>
                     </tr>
                   ))}
-                  {picked.length === 0 && <tr><td colSpan={5} className="cv-td py-8 text-center text-muted">Selecciona al menos un nivel de riesgo para ver la vista previa.</td></tr>}
+                  {picked.length === 0 && <tr><td colSpan={6} className="cv-td py-8 text-center text-muted">Selecciona al menos un nivel de riesgo para ver la vista previa.</td></tr>}
                 </tbody>
               </table>
             </div>
