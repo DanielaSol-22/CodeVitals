@@ -46,7 +46,7 @@ function TrendChart({ points, labels }: { points: number[]; labels: string[] }) 
         {points.map((v, i) => <circle key={i} cx={x(i)} cy={y(v)} r={i === last ? 4.5 : 3.5} style={{ fill: i === last ? 'var(--color-chart-line)' : 'var(--color-surface)', stroke: 'var(--color-chart-line)' }} strokeWidth="2" />)}
       </svg>
       <div className="relative mt-1 h-4 text-xs text-muted" aria-hidden="true">
-        {labels.map((l, i) => <span key={i} className="absolute whitespace-nowrap tabular-nums" style={{ left: `${(x(i) / W) * 100}%`, transform: i === 0 ? 'none' : i === last ? 'translateX(-100%)' : 'translateX(-50%)' }}>{i === 0 || i === last || points.length <= 6 ? l : ''}</span>)}
+        {labels.map((l, i) => <span key={i} className="absolute whitespace-nowrap tabular-nums" style={{ left: `${(x(i) / W) * 100}%`, transform: i === 0 ? 'none' : i === last ? 'translateX(-100%)' : 'translateX(-50%)' }}>{points.length <= 6 || (last - i) % 2 === 0 ? l : ''}</span>)}
       </div>
       <div className="mt-1 text-right text-xs font-semibold text-ink">Último · {points[last]}</div>
     </div>

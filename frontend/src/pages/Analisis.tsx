@@ -121,10 +121,10 @@ export default function Analisis() {
                   </circle>
                 ))}
               </svg>
-              <div className="pointer-events-none absolute -top-1 rounded-md bg-ink px-2.5 py-1 text-xs leading-snug text-canvas" style={tipStyle}>
+              <div className="pointer-events-none absolute -top-1 whitespace-nowrap rounded-md bg-ink px-2.5 py-1 text-xs leading-snug text-canvas" style={tipStyle}>
                 {history[hi].label}<br />{values[hi]}
               </div>
-              <div className="relative mt-1 h-4 text-xs text-muted" aria-hidden="true">{history.map((h, i) => <span key={i} className="absolute whitespace-nowrap tabular-nums" style={{ left: `${(x(i) / W) * 100}%`, transform: i === 0 ? 'translateX(-15%)' : i === history.length - 1 ? 'translateX(-85%)' : 'translateX(-50%)' }}>{history.length <= 8 || i % 2 === 0 || i === history.length - 1 ? h.label : ''}</span>)}</div>
+              <div className="relative mt-1 h-4 text-xs text-muted" aria-hidden="true">{history.map((h, i) => <span key={i} className="absolute whitespace-nowrap tabular-nums" style={{ left: `${(x(i) / W) * 100}%`, transform: i === 0 ? 'translateX(-15%)' : i === history.length - 1 ? 'translateX(-85%)' : 'translateX(-50%)' }}>{history.length <= 6 || (history.length - 1 - i) % 2 === 0 ? h.label : ''}</span>)}</div>
             </div>
           </div>
           )}
