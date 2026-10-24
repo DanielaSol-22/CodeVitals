@@ -95,7 +95,7 @@ export default function Analisis() {
         ))}
       </div>
 
-      <section className="flex flex-col gap-4 lg:flex-row">
+      <section className="flex flex-col gap-6 lg:flex-row">
         <div className="cv-card lg:flex-[1.9]">
           <h2 className="cv-h2 mb-3">{TITLES[tab]}</h2>
           {!hasChart ? (
@@ -116,7 +116,7 @@ export default function Analisis() {
                 <path d={line} fill="none" style={{ stroke: 'var(--color-chart-line)' }} strokeWidth="2.2" strokeLinejoin="round" />
                 <path d={`M${x(hi)} 10V${H - 8}`} style={{ stroke: 'var(--color-chart-line)' }} strokeDasharray="3 3" />
                 {values.map((v, i) => (
-                  <circle key={i} cx={x(i)} cy={y(v)} r={i === hi ? 5.5 : 4} style={{ fill: 'var(--color-chart-line)' }} tabIndex={0} onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} onMouseLeave={() => setHover(null)} onBlur={() => setHover(null)}>
+                  <circle key={i} cx={x(i)} cy={y(v)} r={i === hi ? 5.5 : 4} strokeWidth="2" style={{ fill: i === hi ? 'var(--color-chart-line)' : 'var(--color-surface)', stroke: 'var(--color-chart-line)' }} tabIndex={0} onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} onMouseLeave={() => setHover(null)} onBlur={() => setHover(null)}>
                     <title>{`${history[i].label}: ${v}`}</title>
                   </circle>
                 ))}
@@ -124,7 +124,7 @@ export default function Analisis() {
               <div className="pointer-events-none absolute -top-1 rounded-md bg-ink px-2.5 py-1 text-xs leading-snug text-canvas" style={tipStyle}>
                 {history[hi].label}<br />{values[hi]}
               </div>
-              <div className="mt-1 flex justify-between text-xs text-muted" style={{ paddingLeft: `${(PADL / W) * 100}%` }} aria-hidden="true">{history.map((h) => <span key={h.label}>{h.label}</span>)}</div>
+              <div className="relative mt-1 h-4 text-xs text-muted" aria-hidden="true">{history.map((h, i) => <span key={i} className="absolute whitespace-nowrap tabular-nums" style={{ left: `${(x(i) / W) * 100}%`, transform: i === 0 ? 'translateX(-15%)' : i === history.length - 1 ? 'translateX(-85%)' : 'translateX(-50%)' }}>{history.length <= 8 || i % 2 === 0 || i === history.length - 1 ? h.label : ''}</span>)}</div>
             </div>
           </div>
           )}

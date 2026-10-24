@@ -2,6 +2,7 @@
 Validación estadística (Spearman + Chi-cuadrado).
   POST /api/v1/stats/validation   -> analiza el repositorio, calcula y guarda resultados
   GET  /api/v1/stats/validation   -> último resultado guardado para un repo_url
+  POST /api/v1/stats/temporal     -> validación predictiva en el tiempo (puntaje al corte vs correcciones posteriores)
 """
 import asyncio
 
@@ -15,6 +16,8 @@ from app import models
 from app.database import get_db
 from app import security
 from app.modules import statistics_analyzer as sa
+from app.modules import temporal_validation as tv
+from app.modules.git_analyzer import GitAnalyzer
 from app.routers.risk import _analyze_all_modules, _cloned_repo_dir
 
 MAX_PARALLEL_REPOS = 3
@@ -151,3 +154,41 @@ async def last_validation(repo_url: str = Query(...), db: AsyncSession = Depends
          "interpretacion": r.interpretacion, "fecha": r.fecha_calculo.isoformat()}
         for r in rows
     ]
+
+
+class TemporalRequest(BaseModel):
+    repo_urls: list[str] = Field(min_length=1, max_length=20)
+    cutoff_ratio: float = Field(default=tv.CUTOFF_DEFAULT, ge=0.5, le=0.9,
+                                description="Fracción de commits que se considera el pasado (0.5 a 0.9).")
+    alpha: float = Field(default=sa.ALPHA_DEFAULT, gt=0, lt=1)
+
+    @field_validator("repo_urls")
+    @classmethod
+    def _check_urls(cls, v: list[str]) -> list[str]:
+        return list(dict.fromkeys(security.validate_repo_url(u) for u in v))
+
+
+@router.post("/temporal")
+async def run_temporal_validation(payload: TemporalRequest):
+    """Validación NO circular: calcula el puntaje con el estado del repositorio al corte (solo el pasado)
+    y mide si los archivos de mayor riesgo reciben más correcciones DESPUÉS del corte. Compara contra
+    líneas base simples (LOC, complejidad, frecuencia de cambios y correcciones previas).
+    No modifica la fórmula ni los pesos y no escribe en la base de datos."""
+    def work():
+        dirs, failed = {}, []
+        for url in payload.repo_urls:
+            try:
+                git = GitAnalyzer(url)
+                dirs[url.rstrip("/").split("/")[-1] or url] = git._ensure_cloned()
+            except Exception as e:  # privado, inexistente, sin red...
+                failed.append({"repo": url, "error": str(e)[:200]})
+        if not dirs:
+            return None, failed
+        result = tv.temporal_validation(dirs, payload.cutoff_ratio, payload.alpha)
+        result["failed"] = failed + result["failed"]
+        return result, failed
+
+    result, failed = await run_in_threadpool(work)
+    if result is None:
+        raise HTTPException(status_code=400, detail={"message": "Ningún repositorio se pudo clonar.", "failed": failed})
+    return result

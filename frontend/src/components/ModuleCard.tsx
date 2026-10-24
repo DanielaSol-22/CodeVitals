@@ -30,13 +30,14 @@ export function LangIcon({ path, size = 20 }: { path: string; size?: number }) {
 }
 
 /** Barra compacta de calor (verde → ámbar → rojo). El valor exacto va en el tooltip y en texto para lectores de pantalla. */
-export function HeatBar({ value, label }: { value: number; label: string }) {
+export function HeatBar({ value, label, text }: { value: number; label: string; text?: string }) {
   const pct = Math.min(100, Math.max(4, value))
   return (
-    <span className="inline-flex items-center" title={label}>
+    <span className="inline-flex items-center gap-2" title={label}>
       <span className="relative block h-1.5 w-16 overflow-hidden rounded-full" style={{ background: 'color-mix(in srgb, var(--color-ink) 12%, transparent)' }} role="img" aria-label={label}>
-        <span className="absolute inset-y-0 left-0 block rounded-full" style={{ width: `${pct}%`, backgroundImage: 'linear-gradient(90deg, #2fbf71 0%, #e5b02f 55%, #e5484d 100%)', backgroundSize: `${(100 / pct) * 100}% 100%` }} />
+        <span className="absolute inset-y-0 left-0 block rounded-full" style={{ width: `${pct}%`, backgroundImage: 'linear-gradient(90deg, color-mix(in srgb, var(--color-brand) 55%, transparent), var(--color-brand))' }} />
       </span>
+      {text !== undefined && <span className="w-6 text-right text-xs tabular-nums text-soft">{text}</span>}
     </span>
   )
 }
@@ -58,7 +59,7 @@ export function TeamRisk({ risk }: { risk: number }) {
   )
 }
 
-export const GRID = 'lg:grid-cols-[minmax(0,2.4fr)_96px_72px_92px_84px_72px_84px_20px]'
+export const GRID = 'lg:grid-cols-[minmax(0,2.4fr)_96px_64px_136px_84px_72px_84px_20px]'
 
 export const ModuleCard = memo(function ModuleCard({ m, onOpen }: { m: ModuleRow; onOpen: (m: ModuleRow, opener: HTMLElement) => void }) {
   const i = m.path.lastIndexOf('/')
@@ -69,7 +70,7 @@ export const ModuleCard = memo(function ModuleCard({ m, onOpen }: { m: ModuleRow
     <div
       role="row"
       onClick={(e) => onOpen(m, e.currentTarget)}
-      className={`grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 rounded-[10px] border border-line bg-surface px-4 py-3 transition-colors hover:border-brand/60 hover:bg-table ${GRID} lg:gap-y-0`}
+      className={`grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 rounded-[10px] border border-line bg-surface px-4 py-4 transition-colors hover:border-brand/60 hover:bg-table ${GRID} lg:gap-y-0`}
     >
       <div role="cell" className="min-w-0">
         <button onClick={(e) => { e.stopPropagation(); onOpen(m, e.currentTarget) }} className="flex max-w-full items-center gap-2.5 text-left" aria-label={m.path}>
@@ -81,13 +82,13 @@ export const ModuleCard = memo(function ModuleCard({ m, onOpen }: { m: ModuleRow
         </button>
       </div>
       <div role="cell" className="justify-self-end lg:justify-self-start"><RiskPill level={m.level} /></div>
-      <div role="cell" className="font-display text-xl font-bold tabular-nums" style={{ color: scoreText(m.score) }}>
+      <div role="cell" className="font-display text-base font-bold tabular-nums lg:text-right" style={{ color: scoreText(m.score) }}>
         <span className="mr-1.5 text-xs font-normal text-muted lg:hidden">Puntaje</span>{Math.round(m.score)}
       </div>
-      <div role="cell" className="flex items-center gap-2 text-xs text-muted"><span className="lg:hidden">CC</span><HeatBar value={heat} label={`Complejidad ciclomática: ${m.cc}`} /></div>
+      <div role="cell" className="flex items-center gap-2 text-xs text-muted"><span className="lg:hidden">CC</span><HeatBar value={heat} label={`Complejidad ciclomática: ${m.cc}`} text={String(m.cc)} /></div>
       <div role="cell" className="flex items-center gap-2 text-xs text-muted"><span className="lg:hidden">Equipo</span><TeamRisk risk={m.busFactor} /></div>
-      <div role="cell" className="text-[13px] tabular-nums text-soft"><span className="mr-1.5 text-xs text-muted lg:hidden">Cambios</span>{m.churn}</div>
-      <div role="cell" className="text-[13px] tabular-nums text-soft"><span className="mr-1.5 text-xs text-muted lg:hidden">Deficiencias</span>{m.deficiencies}</div>
+      <div role="cell" className="text-sm tabular-nums text-soft lg:text-right"><span className="mr-1.5 text-xs text-muted lg:hidden">Cambios</span>{m.churn}</div>
+      <div role="cell" className="text-sm tabular-nums text-soft lg:text-right"><span className="mr-1.5 text-xs text-muted lg:hidden">Deficiencias</span>{m.deficiencies}</div>
       <div role="cell" className="hidden text-muted lg:block"><Icon name="chevR" size={16} strokeWidth={2} /></div>
     </div>
   )

@@ -11,14 +11,14 @@ export function KpiCard({ label, value, icon, tint, color, trend, trendGood, sub
   const trendClass = favorable === null ? 'text-muted' : favorable ? 'text-risk-low' : 'text-risk-high'
   void tint
   return (
-    <div className="cv-card relative flex min-w-0 flex-col gap-2">
+    <div className="cv-card relative flex min-w-0 flex-col gap-3">
       <div className="relative flex items-center gap-2" style={{ color }}>
         <Icon name={icon} size={17} />
         <div className="cv-label min-w-0 flex-1 !text-muted">{label}</div>
         {badge}
       </div>
       <div className="relative flex items-baseline gap-1">
-        <span className="font-display truncate text-[2.6rem] font-bold leading-none tabular-nums">{value}</span>
+        <span className="font-display truncate text-2xl font-bold leading-8 tabular-nums">{value}</span>
         {unit && <span className="text-lg font-medium text-muted">{unit}</span>}
       </div>
       {bar !== undefined && (

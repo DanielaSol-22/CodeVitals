@@ -75,8 +75,8 @@ export default function Modulos() {
     queueMicrotask(() => opener.current?.focus())
   }, [patch])
 
-  const th = (key: SortKey, label: string, hint?: string) => (
-    <div role="columnheader" title={hint} aria-sort={sort?.key === key ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'}>
+  const th = (key: SortKey, label: string, hint?: string, right = false) => (
+    <div role="columnheader" className={right ? 'lg:text-right' : ''} title={hint} aria-sort={sort?.key === key ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'}>
       <button onClick={() => patch({ orden: sort?.key === key && sort.dir === -1 ? `${key}:asc` : `${key}:desc`, pagina: null })} className="inline-flex items-center gap-1 hover:text-ink">
         {label}{sort?.key === key && <span aria-hidden="true">{sort.dir === 1 ? '↑' : '↓'}</span>}
       </button>
@@ -116,7 +116,7 @@ export default function Modulos() {
           <div role="rowgroup">
             <div role="row" className={`hidden gap-x-4 px-4 pb-1 text-xs font-medium text-muted lg:grid ${GRID}`}>
               <div role="columnheader">Módulo</div>
-              {th('level', 'Riesgo')}{th('score', 'Puntaje', 'Puntaje de riesgo (0-100)')}{th('cc', 'CC', 'Complejidad ciclomática')}{th('busFactor', 'Equipo', 'Riesgo por concentración de autores (bus factor)')}{th('churn', 'Cambios', 'Frecuencia de cambios')}{th('deficiencies', 'Deficiencias')}
+              {th('level', 'Riesgo')}{th('score', 'Puntaje', 'Puntaje de riesgo (0-100)', true)}{th('cc', 'CC', 'Complejidad ciclomática')}{th('busFactor', 'Equipo', 'Riesgo por concentración de autores (bus factor)')}{th('churn', 'Cambios', 'Frecuencia de cambios', true)}{th('deficiencies', 'Deficiencias', undefined, true)}
               <div role="columnheader"><span className="sr-only">Abrir</span></div>
             </div>
           </div>

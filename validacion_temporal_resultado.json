@@ -1,0 +1,1282 @@
+{
+  "design": {
+    "cutoff_ratio": 0.7,
+    "top_fraction": 0.2,
+    "outcome": "Commits de corrección posteriores al corte",
+    "note": "El puntaje se calcula solo con el código y el historial anteriores al corte; las correcciones se cuentan después. La fórmula y los pesos no se modifican. Las correcciones se detectan por palabras clave del mensaje del commit (aproximación)."
+  },
+  "repositories": [
+    {
+      "repo": "black",
+      "total_commits": 2444,
+      "past_commits": 1710,
+      "future_commits": 734,
+      "cutoff_sha": "5515a5ac7ae775a080e5880caa5d0effb4cc5773",
+      "evaluation": {
+        "n_files": 230,
+        "future_fixes": 181,
+        "top_fraction": 0.2,
+        "sufficient": true,
+        "alpha": 0.05,
+        "files_with_fix": 42,
+        "score_vs_future_fixes": {
+          "test": "spearman",
+          "n": 230,
+          "alpha": 0.05,
+          "rho": 0.4047,
+          "p_value": 0.0,
+          "significant": true,
+          "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+        },
+        "comparison": [
+          {
+            "predictor": "score",
+            "label": "Puntaje de riesgo (fórmula completa)",
+            "auc": 0.7871,
+            "capture_top": 0.8619,
+            "spearman": {
+              "test": "spearman",
+              "n": 230,
+              "alpha": 0.05,
+              "rho": 0.4047,
+              "p_value": 0.0,
+              "significant": true,
+              "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+            }
+          },
+          {
+            "predictor": "loc",
+            "label": "Solo líneas de código",
+            "auc": 0.7582,
+            "capture_top": 0.8287,
+            "spearman": {
+              "test": "spearman",
+              "n": 230,
+              "alpha": 0.05,
+              "rho": 0.3685,
+              "p_value": 0.0,
+              "significant": true,
+              "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.0216,
+              "high": 0.0785
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "cc",
+            "label": "Solo complejidad ciclomática",
+            "auc": 0.7853,
+            "capture_top": 0.8066,
+            "spearman": {
+              "test": "spearman",
+              "n": 230,
+              "alpha": 0.05,
+              "rho": 0.4195,
+              "p_value": 0.0,
+              "significant": true,
+              "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.032,
+              "high": 0.0382
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "past_commits",
+            "label": "Solo frecuencia de cambios previa",
+            "auc": 0.7855,
+            "capture_top": 0.8287,
+            "spearman": {
+              "test": "spearman",
+              "n": 230,
+              "alpha": 0.05,
+              "rho": 0.4063,
+              "p_value": 0.0,
+              "significant": true,
+              "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.0507,
+              "high": 0.0477
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "past_fixes",
+            "label": "Solo correcciones previas (historial de errores)",
+            "auc": 0.699,
+            "capture_top": 0.7569,
+            "spearman": {
+              "test": "spearman",
+              "n": 230,
+              "alpha": 0.05,
+              "rho": 0.3381,
+              "p_value": 0.0,
+              "significant": true,
+              "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": 0.0179,
+              "high": 0.1581
+            },
+            "score_better": true,
+            "score_worse": false
+          }
+        ],
+        "by_class": [
+          {
+            "classification": "LOW",
+            "n": 169,
+            "mean_future_fixes": 0.101,
+            "pct_with_fix": 8.3
+          },
+          {
+            "classification": "MEDIUM",
+            "n": 46,
+            "mean_future_fixes": 1.37,
+            "pct_with_fix": 41.3
+          },
+          {
+            "classification": "HIGH",
+            "n": 15,
+            "mean_future_fixes": 6.733,
+            "pct_with_fix": 60.0
+          }
+        ],
+        "kruskal": {
+          "h": 52.4246,
+          "p_value": 0.0,
+          "significant": true
+        },
+        "best_baseline": {
+          "predictor": "past_commits",
+          "label": "Solo frecuencia de cambios previa",
+          "auc": 0.7855
+        },
+        "score_beats_all_baselines": false
+      }
+    },
+    {
+      "repo": "requests",
+      "total_commits": 6495,
+      "past_commits": 4546,
+      "future_commits": 1949,
+      "cutoff_sha": "35056b1de6687e97ea1e84f2f4b8dc4d3e1f1ff8",
+      "evaluation": {
+        "n_files": 107,
+        "future_fixes": 131,
+        "top_fraction": 0.2,
+        "sufficient": true,
+        "alpha": 0.05,
+        "files_with_fix": 19,
+        "score_vs_future_fixes": {
+          "test": "spearman",
+          "n": 107,
+          "alpha": 0.05,
+          "rho": 0.2169,
+          "p_value": 0.02484,
+          "significant": true,
+          "interpretation": "Correlación positiva débil estadísticamente significativa (p < 0.05)."
+        },
+        "comparison": [
+          {
+            "predictor": "score",
+            "label": "Puntaje de riesgo (fórmula completa)",
+            "auc": 0.6406,
+            "capture_top": 0.687,
+            "spearman": {
+              "test": "spearman",
+              "n": 107,
+              "alpha": 0.05,
+              "rho": 0.2169,
+              "p_value": 0.02484,
+              "significant": true,
+              "interpretation": "Correlación positiva débil estadísticamente significativa (p < 0.05)."
+            }
+          },
+          {
+            "predictor": "loc",
+            "label": "Solo líneas de código",
+            "auc": 0.5658,
+            "capture_top": 0.6794,
+            "spearman": {
+              "test": "spearman",
+              "n": 107,
+              "alpha": 0.05,
+              "rho": 0.1172,
+              "p_value": 0.229352,
+              "significant": false,
+              "interpretation": "Correlación débil no significativa (p ≥ 0.05); no se puede afirmar relación."
+            },
+            "auc_diff_ci95": {
+              "low": -0.0088,
+              "high": 0.1593
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "cc",
+            "label": "Solo complejidad ciclomática",
+            "auc": 0.5769,
+            "capture_top": 0.687,
+            "spearman": {
+              "test": "spearman",
+              "n": 107,
+              "alpha": 0.05,
+              "rho": 0.1333,
+              "p_value": 0.171042,
+              "significant": false,
+              "interpretation": "Correlación débil no significativa (p ≥ 0.05); no se puede afirmar relación."
+            },
+            "auc_diff_ci95": {
+              "low": -0.015,
+              "high": 0.1477
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "past_commits",
+            "label": "Solo frecuencia de cambios previa",
+            "auc": 0.8388,
+            "capture_top": 0.8931,
+            "spearman": {
+              "test": "spearman",
+              "n": 107,
+              "alpha": 0.05,
+              "rho": 0.4735,
+              "p_value": 0.0,
+              "significant": true,
+              "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.3022,
+              "high": -0.1056
+            },
+            "score_better": false,
+            "score_worse": true
+          },
+          {
+            "predictor": "past_fixes",
+            "label": "Solo correcciones previas (historial de errores)",
+            "auc": 0.9142,
+            "capture_top": 0.916,
+            "spearman": {
+              "test": "spearman",
+              "n": 107,
+              "alpha": 0.05,
+              "rho": 0.7032,
+              "p_value": 0.0,
+              "significant": true,
+              "interpretation": "Correlación positiva muy fuerte estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.3957,
+              "high": -0.1639
+            },
+            "score_better": false,
+            "score_worse": true
+          }
+        ],
+        "by_class": [
+          {
+            "classification": "LOW",
+            "n": 57,
+            "mean_future_fixes": 0.579,
+            "pct_with_fix": 15.8
+          },
+          {
+            "classification": "MEDIUM",
+            "n": 38,
+            "mean_future_fixes": 0.237,
+            "pct_with_fix": 10.5
+          },
+          {
+            "classification": "HIGH",
+            "n": 12,
+            "mean_future_fixes": 7.417,
+            "pct_with_fix": 50.0
+          }
+        ],
+        "kruskal": {
+          "h": 13.7136,
+          "p_value": 0.001052,
+          "significant": true
+        },
+        "best_baseline": {
+          "predictor": "past_fixes",
+          "label": "Solo correcciones previas (historial de errores)",
+          "auc": 0.9142
+        },
+        "score_beats_all_baselines": false
+      }
+    },
+    {
+      "repo": "starlette",
+      "total_commits": 1791,
+      "past_commits": 1253,
+      "future_commits": 538,
+      "cutoff_sha": "23c81da94b57701eabd43f582093442e6811f81d",
+      "evaluation": {
+        "n_files": 67,
+        "future_fixes": 24,
+        "top_fraction": 0.2,
+        "sufficient": true,
+        "alpha": 0.05,
+        "files_with_fix": 16,
+        "score_vs_future_fixes": {
+          "test": "spearman",
+          "n": 67,
+          "alpha": 0.05,
+          "rho": 0.4472,
+          "p_value": 0.000148,
+          "significant": true,
+          "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+        },
+        "comparison": [
+          {
+            "predictor": "score",
+            "label": "Puntaje de riesgo (fórmula completa)",
+            "auc": 0.7904,
+            "capture_top": 0.5,
+            "spearman": {
+              "test": "spearman",
+              "n": 67,
+              "alpha": 0.05,
+              "rho": 0.4472,
+              "p_value": 0.000148,
+              "significant": true,
+              "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+            }
+          },
+          {
+            "predictor": "loc",
+            "label": "Solo líneas de código",
+            "auc": 0.7855,
+            "capture_top": 0.5,
+            "spearman": {
+              "test": "spearman",
+              "n": 67,
+              "alpha": 0.05,
+              "rho": 0.4378,
+              "p_value": 0.000212,
+              "significant": true,
+              "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.0439,
+              "high": 0.0527
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "cc",
+            "label": "Solo complejidad ciclomática",
+            "auc": 0.7665,
+            "capture_top": 0.4167,
+            "spearman": {
+              "test": "spearman",
+              "n": 67,
+              "alpha": 0.05,
+              "rho": 0.4102,
+              "p_value": 0.000566,
+              "significant": true,
+              "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.0333,
+              "high": 0.0891
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "past_commits",
+            "label": "Solo frecuencia de cambios previa",
+            "auc": 0.7506,
+            "capture_top": 0.5,
+            "spearman": {
+              "test": "spearman",
+              "n": 67,
+              "alpha": 0.05,
+              "rho": 0.387,
+              "p_value": 0.001216,
+              "significant": true,
+              "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.034,
+              "high": 0.1239
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "past_fixes",
+            "label": "Solo correcciones previas (historial de errores)",
+            "auc": 0.7384,
+            "capture_top": 0.4583,
+            "spearman": {
+              "test": "spearman",
+              "n": 67,
+              "alpha": 0.05,
+              "rho": 0.3766,
+              "p_value": 0.001686,
+              "significant": true,
+              "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.0707,
+              "high": 0.197
+            },
+            "score_better": false,
+            "score_worse": false
+          }
+        ],
+        "by_class": [
+          {
+            "classification": "LOW",
+            "n": 24,
+            "mean_future_fixes": 0.083,
+            "pct_with_fix": 8.3
+          },
+          {
+            "classification": "MEDIUM",
+            "n": 22,
+            "mean_future_fixes": 0.273,
+            "pct_with_fix": 18.2
+          },
+          {
+            "classification": "HIGH",
+            "n": 21,
+            "mean_future_fixes": 0.762,
+            "pct_with_fix": 47.6
+          }
+        ],
+        "kruskal": {
+          "h": 10.722,
+          "p_value": 0.004696,
+          "significant": true
+        },
+        "best_baseline": {
+          "predictor": "loc",
+          "label": "Solo líneas de código",
+          "auc": 0.7855
+        },
+        "score_beats_all_baselines": false
+      }
+    },
+    {
+      "repo": "itsdangerous",
+      "total_commits": 677,
+      "past_commits": 473,
+      "future_commits": 204,
+      "cutoff_sha": "faa28bccc85ee47a8274536dd3649a0b67d0a75b",
+      "evaluation": {
+        "n_files": 16,
+        "future_fixes": 2,
+        "top_fraction": 0.2,
+        "sufficient": false,
+        "note": "Muestra insuficiente: 16 archivos y 2 correcciones posteriores al corte (se necesitan al menos 10 archivos y 10 correcciones)."
+      }
+    },
+    {
+      "repo": "loguru",
+      "total_commits": 1058,
+      "past_commits": 740,
+      "future_commits": 318,
+      "cutoff_sha": "aeb60449fca6fd13b5cf73daf53e00830b6221f5",
+      "evaluation": {
+        "n_files": 151,
+        "future_fixes": 86,
+        "top_fraction": 0.2,
+        "sufficient": true,
+        "alpha": 0.05,
+        "files_with_fix": 38,
+        "score_vs_future_fixes": {
+          "test": "spearman",
+          "n": 151,
+          "alpha": 0.05,
+          "rho": 0.6378,
+          "p_value": 0.0,
+          "significant": true,
+          "interpretation": "Correlación positiva fuerte estadísticamente significativa (p < 0.05)."
+        },
+        "comparison": [
+          {
+            "predictor": "score",
+            "label": "Puntaje de riesgo (fórmula completa)",
+            "auc": 0.9187,
+            "capture_top": 0.7442,
+            "spearman": {
+              "test": "spearman",
+              "n": 151,
+              "alpha": 0.05,
+              "rho": 0.6378,
+              "p_value": 0.0,
+              "significant": true,
+              "interpretation": "Correlación positiva fuerte estadísticamente significativa (p < 0.05)."
+            }
+          },
+          {
+            "predictor": "loc",
+            "label": "Solo líneas de código",
+            "auc": 0.9403,
+            "capture_top": 0.7558,
+            "spearman": {
+              "test": "spearman",
+              "n": 151,
+              "alpha": 0.05,
+              "rho": 0.6719,
+              "p_value": 0.0,
+              "significant": true,
+              "interpretation": "Correlación positiva fuerte estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.0472,
+              "high": 0.0011
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "cc",
+            "label": "Solo complejidad ciclomática",
+            "auc": 0.8999,
+            "capture_top": 0.7326,
+            "spearman": {
+              "test": "spearman",
+              "n": 151,
+              "alpha": 0.05,
+              "rho": 0.6149,
+              "p_value": 0.0,
+              "significant": true,
+              "interpretation": "Correlación positiva fuerte estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.0175,
+              "high": 0.0708
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "past_commits",
+            "label": "Solo frecuencia de cambios previa",
+            "auc": 0.8361,
+            "capture_top": 0.6395,
+            "spearman": {
+              "test": "spearman",
+              "n": 151,
+              "alpha": 0.05,
+              "rho": 0.5195,
+              "p_value": 0.0,
+              "significant": true,
+              "interpretation": "Correlación positiva fuerte estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": 0.0198,
+              "high": 0.1613
+            },
+            "score_better": true,
+            "score_worse": false
+          },
+          {
+            "predictor": "past_fixes",
+            "label": "Solo correcciones previas (historial de errores)",
+            "auc": 0.8408,
+            "capture_top": 0.6744,
+            "spearman": {
+              "test": "spearman",
+              "n": 151,
+              "alpha": 0.05,
+              "rho": 0.5523,
+              "p_value": 0.0,
+              "significant": true,
+              "interpretation": "Correlación positiva fuerte estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": 0.02,
+              "high": 0.1457
+            },
+            "score_better": true,
+            "score_worse": false
+          }
+        ],
+        "by_class": [
+          {
+            "classification": "LOW",
+            "n": 95,
+            "mean_future_fixes": 0.074,
+            "pct_with_fix": 5.3
+          },
+          {
+            "classification": "MEDIUM",
+            "n": 36,
+            "mean_future_fixes": 0.889,
+            "pct_with_fix": 47.2
+          },
+          {
+            "classification": "HIGH",
+            "n": 20,
+            "mean_future_fixes": 2.35,
+            "pct_with_fix": 80.0
+          }
+        ],
+        "kruskal": {
+          "h": 64.474,
+          "p_value": 0.0,
+          "significant": true
+        },
+        "best_baseline": {
+          "predictor": "loc",
+          "label": "Solo líneas de código",
+          "auc": 0.9403
+        },
+        "score_beats_all_baselines": false
+      }
+    },
+    {
+      "repo": "prettytable",
+      "total_commits": 836,
+      "past_commits": 585,
+      "future_commits": 251,
+      "cutoff_sha": "c1fd089e900ba088c73fb680441b98e339f2babc",
+      "evaluation": {
+        "n_files": 5,
+        "future_fixes": 31,
+        "top_fraction": 0.2,
+        "sufficient": false,
+        "note": "Muestra insuficiente: 5 archivos y 31 correcciones posteriores al corte (se necesitan al menos 10 archivos y 10 correcciones)."
+      }
+    },
+    {
+      "repo": "tablib",
+      "total_commits": 1246,
+      "past_commits": 872,
+      "future_commits": 374,
+      "cutoff_sha": "77a9e2579551a870f31ece088f0d34c5171ef687",
+      "evaluation": {
+        "n_files": 297,
+        "future_fixes": 98,
+        "top_fraction": 0.2,
+        "sufficient": true,
+        "alpha": 0.05,
+        "files_with_fix": 14,
+        "score_vs_future_fixes": {
+          "test": "spearman",
+          "n": 297,
+          "alpha": 0.05,
+          "rho": 0.0277,
+          "p_value": 0.634674,
+          "significant": false,
+          "interpretation": "Correlación nula no significativa (p ≥ 0.05); no se puede afirmar relación."
+        },
+        "comparison": [
+          {
+            "predictor": "score",
+            "label": "Puntaje de riesgo (fórmula completa)",
+            "auc": 0.5336,
+            "capture_top": 0.5714,
+            "spearman": {
+              "test": "spearman",
+              "n": 297,
+              "alpha": 0.05,
+              "rho": 0.0277,
+              "p_value": 0.634674,
+              "significant": false,
+              "interpretation": "Correlación nula no significativa (p ≥ 0.05); no se puede afirmar relación."
+            }
+          },
+          {
+            "predictor": "loc",
+            "label": "Solo líneas de código",
+            "auc": 0.4513,
+            "capture_top": 0.5204,
+            "spearman": {
+              "test": "spearman",
+              "n": 297,
+              "alpha": 0.05,
+              "rho": -0.0329,
+              "p_value": 0.572535,
+              "significant": false,
+              "interpretation": "Correlación nula no significativa (p ≥ 0.05); no se puede afirmar relación."
+            },
+            "auc_diff_ci95": {
+              "low": 0.0014,
+              "high": 0.1616
+            },
+            "score_better": true,
+            "score_worse": false
+          },
+          {
+            "predictor": "cc",
+            "label": "Solo complejidad ciclomática",
+            "auc": 0.452,
+            "capture_top": 0.5204,
+            "spearman": {
+              "test": "spearman",
+              "n": 297,
+              "alpha": 0.05,
+              "rho": -0.0328,
+              "p_value": 0.573128,
+              "significant": false,
+              "interpretation": "Correlación nula no significativa (p ≥ 0.05); no se puede afirmar relación."
+            },
+            "auc_diff_ci95": {
+              "low": 0.0172,
+              "high": 0.1445
+            },
+            "score_better": true,
+            "score_worse": false
+          },
+          {
+            "predictor": "past_commits",
+            "label": "Solo frecuencia de cambios previa",
+            "auc": 0.8911,
+            "capture_top": 0.9796,
+            "spearman": {
+              "test": "spearman",
+              "n": 297,
+              "alpha": 0.05,
+              "rho": 0.3159,
+              "p_value": 0.0,
+              "significant": true,
+              "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.5512,
+              "high": -0.1805
+            },
+            "score_better": false,
+            "score_worse": true
+          },
+          {
+            "predictor": "past_fixes",
+            "label": "Solo correcciones previas (historial de errores)",
+            "auc": 0.8526,
+            "capture_top": 0.8673,
+            "spearman": {
+              "test": "spearman",
+              "n": 297,
+              "alpha": 0.05,
+              "rho": 0.6299,
+              "p_value": 0.0,
+              "significant": true,
+              "interpretation": "Correlación positiva fuerte estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.4957,
+              "high": -0.1637
+            },
+            "score_better": false,
+            "score_worse": true
+          }
+        ],
+        "by_class": [
+          {
+            "classification": "LOW",
+            "n": 114,
+            "mean_future_fixes": 0.132,
+            "pct_with_fix": 4.4
+          },
+          {
+            "classification": "MEDIUM",
+            "n": 156,
+            "mean_future_fixes": 0.173,
+            "pct_with_fix": 3.8
+          },
+          {
+            "classification": "HIGH",
+            "n": 27,
+            "mean_future_fixes": 2.074,
+            "pct_with_fix": 11.1
+          }
+        ],
+        "kruskal": {
+          "h": 2.9972,
+          "p_value": 0.223446,
+          "significant": false
+        },
+        "best_baseline": {
+          "predictor": "past_commits",
+          "label": "Solo frecuencia de cambios previa",
+          "auc": 0.8911
+        },
+        "score_beats_all_baselines": false
+      }
+    },
+    {
+      "repo": "cleo",
+      "total_commits": 596,
+      "past_commits": 417,
+      "future_commits": 179,
+      "cutoff_sha": "c12b776a18bab1aa764e2ff6825917ce460448bc",
+      "evaluation": {
+        "n_files": 129,
+        "future_fixes": 20,
+        "top_fraction": 0.2,
+        "sufficient": true,
+        "alpha": 0.05,
+        "files_with_fix": 12,
+        "score_vs_future_fixes": {
+          "test": "spearman",
+          "n": 129,
+          "alpha": 0.05,
+          "rho": 0.2833,
+          "p_value": 0.00114,
+          "significant": true,
+          "interpretation": "Correlación positiva débil estadísticamente significativa (p < 0.05)."
+        },
+        "comparison": [
+          {
+            "predictor": "score",
+            "label": "Puntaje de riesgo (fórmula completa)",
+            "auc": 0.7742,
+            "capture_top": 0.7,
+            "spearman": {
+              "test": "spearman",
+              "n": 129,
+              "alpha": 0.05,
+              "rho": 0.2833,
+              "p_value": 0.00114,
+              "significant": true,
+              "interpretation": "Correlación positiva débil estadísticamente significativa (p < 0.05)."
+            }
+          },
+          {
+            "predictor": "loc",
+            "label": "Solo líneas de código",
+            "auc": 0.7988,
+            "capture_top": 0.7,
+            "spearman": {
+              "test": "spearman",
+              "n": 129,
+              "alpha": 0.05,
+              "rho": 0.3077,
+              "p_value": 0.000389,
+              "significant": true,
+              "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.0887,
+              "high": 0.0258
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "cc",
+            "label": "Solo complejidad ciclomática",
+            "auc": 0.7675,
+            "capture_top": 0.65,
+            "spearman": {
+              "test": "spearman",
+              "n": 129,
+              "alpha": 0.05,
+              "rho": 0.2778,
+              "p_value": 0.001437,
+              "significant": true,
+              "interpretation": "Correlación positiva débil estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.0485,
+              "high": 0.0614
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "past_commits",
+            "label": "Solo frecuencia de cambios previa",
+            "auc": 0.7418,
+            "capture_top": 0.7,
+            "spearman": {
+              "test": "spearman",
+              "n": 129,
+              "alpha": 0.05,
+              "rho": 0.2534,
+              "p_value": 0.003755,
+              "significant": true,
+              "interpretation": "Correlación positiva débil estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.0468,
+              "high": 0.1106
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "past_fixes",
+            "label": "Solo correcciones previas (historial de errores)",
+            "auc": 0.8002,
+            "capture_top": 0.65,
+            "spearman": {
+              "test": "spearman",
+              "n": 129,
+              "alpha": 0.05,
+              "rho": 0.3622,
+              "p_value": 2.5e-05,
+              "significant": true,
+              "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.1933,
+              "high": 0.1357
+            },
+            "score_better": false,
+            "score_worse": false
+          }
+        ],
+        "by_class": [
+          {
+            "classification": "LOW",
+            "n": 92,
+            "mean_future_fixes": 0.054,
+            "pct_with_fix": 4.3
+          },
+          {
+            "classification": "MEDIUM",
+            "n": 32,
+            "mean_future_fixes": 0.25,
+            "pct_with_fix": 15.6
+          },
+          {
+            "classification": "HIGH",
+            "n": 5,
+            "mean_future_fixes": 1.4,
+            "pct_with_fix": 60.0
+          }
+        ],
+        "kruskal": {
+          "h": 21.0107,
+          "p_value": 2.7e-05,
+          "significant": true
+        },
+        "best_baseline": {
+          "predictor": "past_fixes",
+          "label": "Solo correcciones previas (historial de errores)",
+          "auc": 0.8002
+        },
+        "score_beats_all_baselines": false
+      }
+    },
+    {
+      "repo": "pydriller",
+      "total_commits": 924,
+      "past_commits": 646,
+      "future_commits": 278,
+      "cutoff_sha": "a1e375eacc9d1133d720e27994861953729f1512",
+      "evaluation": {
+        "n_files": 49,
+        "future_fixes": 66,
+        "top_fraction": 0.2,
+        "sufficient": true,
+        "alpha": 0.05,
+        "files_with_fix": 17,
+        "score_vs_future_fixes": {
+          "test": "spearman",
+          "n": 49,
+          "alpha": 0.05,
+          "rho": 0.5751,
+          "p_value": 1.5e-05,
+          "significant": true,
+          "interpretation": "Correlación positiva fuerte estadísticamente significativa (p < 0.05)."
+        },
+        "comparison": [
+          {
+            "predictor": "score",
+            "label": "Puntaje de riesgo (fórmula completa)",
+            "auc": 0.8272,
+            "capture_top": 0.7424,
+            "spearman": {
+              "test": "spearman",
+              "n": 49,
+              "alpha": 0.05,
+              "rho": 0.5751,
+              "p_value": 1.5e-05,
+              "significant": true,
+              "interpretation": "Correlación positiva fuerte estadísticamente significativa (p < 0.05)."
+            }
+          },
+          {
+            "predictor": "loc",
+            "label": "Solo líneas de código",
+            "auc": 0.7711,
+            "capture_top": 0.7424,
+            "spearman": {
+              "test": "spearman",
+              "n": 49,
+              "alpha": 0.05,
+              "rho": 0.5102,
+              "p_value": 0.00018,
+              "significant": true,
+              "interpretation": "Correlación positiva fuerte estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.0417,
+              "high": 0.161
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "cc",
+            "label": "Solo complejidad ciclomática",
+            "auc": 0.8566,
+            "capture_top": 0.6515,
+            "spearman": {
+              "test": "spearman",
+              "n": 49,
+              "alpha": 0.05,
+              "rho": 0.6324,
+              "p_value": 1e-06,
+              "significant": true,
+              "interpretation": "Correlación positiva fuerte estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.0896,
+              "high": 0.0259
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "past_commits",
+            "label": "Solo frecuencia de cambios previa",
+            "auc": 0.7748,
+            "capture_top": 0.7576,
+            "spearman": {
+              "test": "spearman",
+              "n": 49,
+              "alpha": 0.05,
+              "rho": 0.501,
+              "p_value": 0.000246,
+              "significant": true,
+              "interpretation": "Correlación positiva fuerte estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": -0.0192,
+              "high": 0.1474
+            },
+            "score_better": false,
+            "score_worse": false
+          },
+          {
+            "predictor": "past_fixes",
+            "label": "Solo correcciones previas (historial de errores)",
+            "auc": 0.7353,
+            "capture_top": 0.6364,
+            "spearman": {
+              "test": "spearman",
+              "n": 49,
+              "alpha": 0.05,
+              "rho": 0.4521,
+              "p_value": 0.001109,
+              "significant": true,
+              "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+            },
+            "auc_diff_ci95": {
+              "low": 0.002,
+              "high": 0.2031
+            },
+            "score_better": true,
+            "score_worse": false
+          }
+        ],
+        "by_class": [
+          {
+            "classification": "LOW",
+            "n": 33,
+            "mean_future_fixes": 0.333,
+            "pct_with_fix": 15.2
+          },
+          {
+            "classification": "MEDIUM",
+            "n": 7,
+            "mean_future_fixes": 2.0,
+            "pct_with_fix": 71.4
+          },
+          {
+            "classification": "HIGH",
+            "n": 9,
+            "mean_future_fixes": 4.556,
+            "pct_with_fix": 77.8
+          }
+        ],
+        "kruskal": {
+          "h": 18.4419,
+          "p_value": 9.9e-05,
+          "significant": true
+        },
+        "best_baseline": {
+          "predictor": "cc",
+          "label": "Solo complejidad ciclomática",
+          "auc": 0.8566
+        },
+        "score_beats_all_baselines": false
+      }
+    }
+  ],
+  "failed": [],
+  "pooled": {
+    "n_files": 1051,
+    "future_fixes": 639,
+    "top_fraction": 0.2,
+    "sufficient": true,
+    "alpha": 0.05,
+    "files_with_fix": 163,
+    "score_vs_future_fixes": {
+      "test": "spearman",
+      "n": 1051,
+      "alpha": 0.05,
+      "rho": 0.3165,
+      "p_value": 0.0,
+      "significant": true,
+      "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+    },
+    "comparison": [
+      {
+        "predictor": "score",
+        "label": "Puntaje de riesgo (fórmula completa)",
+        "auc": 0.743,
+        "capture_top": 0.6917,
+        "spearman": {
+          "test": "spearman",
+          "n": 1051,
+          "alpha": 0.05,
+          "rho": 0.3165,
+          "p_value": 0.0,
+          "significant": true,
+          "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+        }
+      },
+      {
+        "predictor": "loc",
+        "label": "Solo líneas de código",
+        "auc": 0.7113,
+        "capture_top": 0.6604,
+        "spearman": {
+          "test": "spearman",
+          "n": 1051,
+          "alpha": 0.05,
+          "rho": 0.2757,
+          "p_value": 0.0,
+          "significant": true,
+          "interpretation": "Correlación positiva débil estadísticamente significativa (p < 0.05)."
+        },
+        "auc_diff_ci95": {
+          "low": 0.0056,
+          "high": 0.0551
+        },
+        "score_better": true,
+        "score_worse": false
+      },
+      {
+        "predictor": "cc",
+        "label": "Solo complejidad ciclomática",
+        "auc": 0.7007,
+        "capture_top": 0.6432,
+        "spearman": {
+          "test": "spearman",
+          "n": 1051,
+          "alpha": 0.05,
+          "rho": 0.2626,
+          "p_value": 0.0,
+          "significant": true,
+          "interpretation": "Correlación positiva débil estadísticamente significativa (p < 0.05)."
+        },
+        "auc_diff_ci95": {
+          "low": 0.0207,
+          "high": 0.0644
+        },
+        "score_better": true,
+        "score_worse": false
+      },
+      {
+        "predictor": "past_commits",
+        "label": "Solo frecuencia de cambios previa",
+        "auc": 0.8327,
+        "capture_top": 0.831,
+        "spearman": {
+          "test": "spearman",
+          "n": 1051,
+          "alpha": 0.05,
+          "rho": 0.4327,
+          "p_value": 0.0,
+          "significant": true,
+          "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+        },
+        "auc_diff_ci95": {
+          "low": -0.1235,
+          "high": -0.0571
+        },
+        "score_better": false,
+        "score_worse": true
+      },
+      {
+        "predictor": "past_fixes",
+        "label": "Solo correcciones previas (historial de errores)",
+        "auc": 0.8197,
+        "capture_top": 0.8404,
+        "spearman": {
+          "test": "spearman",
+          "n": 1051,
+          "alpha": 0.05,
+          "rho": 0.4887,
+          "p_value": 0.0,
+          "significant": true,
+          "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+        },
+        "auc_diff_ci95": {
+          "low": -0.1171,
+          "high": -0.0408
+        },
+        "score_better": false,
+        "score_worse": true
+      }
+    ],
+    "by_class": [
+      {
+        "classification": "LOW",
+        "n": 597,
+        "mean_future_fixes": 0.152,
+        "pct_with_fix": 7.5
+      },
+      {
+        "classification": "MEDIUM",
+        "n": 342,
+        "mean_future_fixes": 0.468,
+        "pct_with_fix": 17.8
+      },
+      {
+        "classification": "HIGH",
+        "n": 112,
+        "mean_future_fixes": 3.464,
+        "pct_with_fix": 50.9
+      }
+    ],
+    "kruskal": {
+      "h": 152.5589,
+      "p_value": 0.0,
+      "significant": true
+    },
+    "best_baseline": {
+      "predictor": "past_commits",
+      "label": "Solo frecuencia de cambios previa",
+      "auc": 0.8327
+    },
+    "score_beats_all_baselines": false
+  },
+  "generated": "2026-10-23",
+  "source": "9 repositorios de la validación (clonados el 2026-10-23; el HEAD puede tener más commits que en el análisis original)"
+}

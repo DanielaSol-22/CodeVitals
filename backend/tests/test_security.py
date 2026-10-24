@@ -9,6 +9,14 @@ from app import schemas, security
 from app.config import Settings
 
 
+def _symlink_or_skip(target, link):
+    """Crea un enlace simbólico; en Windows sin privilegios omite la prueba."""
+    try:
+        os.symlink(target, link)
+    except OSError as exc:
+        pytest.skip(f"No se pueden crear enlaces simbólicos en este equipo: {exc}")
+
+
 @pytest.fixture
 def root(tmp_path, monkeypatch):
     """Carpeta de repositorios aislada para cada prueba."""
@@ -57,7 +65,7 @@ def test_repo_path_blocks_symlink_escape(root, tmp_path):
     outside = tmp_path / "secret"
     outside.mkdir()
     link = root / "link"
-    os.symlink(outside, link)
+    _symlink_or_skip(outside, link)
     with pytest.raises(ValueError):
         security.validate_repo_path(str(link))
 
@@ -76,7 +84,7 @@ def test_safe_join(tmp_path):
         security.safe_join(str(base), "../x.py")
     outside = tmp_path / "secret"
     outside.mkdir()
-    os.symlink(outside, base / "escape")
+    _symlink_or_skip(outside, base / "escape")
     with pytest.raises(ValueError):
         security.safe_join(str(base), "escape/passwd")
 

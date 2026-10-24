@@ -7,10 +7,15 @@
  * Pares de texto/fondo verificados con contraste >= 4.5:1 (AA) en ambos temas.
  */
 @theme {
-  --font-display: "Bricolage Grotesque", "IBM Plex Sans", system-ui, sans-serif;
-  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-code: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-code: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Escala tipográfica fija: título 24px, texto 14px, etiqueta 12px. */
+  --text-title: 24px;
+  --text-body: 14px;
+  --text-label: 12px;
 
   --shadow-card: none;
   --shadow-pop: 0 12px 32px -8px rgba(15, 23, 32, 0.22);
@@ -37,15 +42,15 @@
   --color-risk-low: #19794a;
   --color-risk-low-bg: #e2f4ea;
   --color-risk-low-fg: #145f3a;
-  --color-risk-low-bar: #2a9d63;
+  --color-risk-low-bar: #22c55e;
   --color-risk-med: #94600a;
   --color-risk-med-bg: #fbefd2;
   --color-risk-med-fg: #6d4506;
-  --color-risk-med-bar: #b87707;
+  --color-risk-med-bar: #f59e0b;
   --color-risk-high: #b82f2f;
   --color-risk-high-bg: #fbe6e6;
   --color-risk-high-fg: #8f2020;
-  --color-risk-high-bar: #d94b4b;
+  --color-risk-high-bar: #ef4444;
 
   /* Series de gráficos (una por componente de la fórmula) */
   --color-chart-complexity: #2159c9;
@@ -59,41 +64,41 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
   --shadow-card: none;
-  --shadow-pop: 0 12px 32px -8px rgba(0, 0, 0, 0.6);
+  --shadow-pop: none;
 
   --color-canvas: #0b0f19;
-  --color-surface: rgba(255, 255, 255, 0.025);
-  --color-panel: #111726;
-  --color-table: rgba(255, 255, 255, 0.04);
-  --color-line: rgba(255, 255, 255, 0.09);
-  --color-ink: #e7eaf3;
-  --color-soft: #b6bdd0;
-  --color-muted: #8d96ad;
+  --color-surface: #111827;
+  --color-panel: #111827;
+  --color-table: #0f1522;
+  --color-line: rgba(255, 255, 255, 0.08);
+  --color-ink: #e6e9f2;
+  --color-soft: #b8c0d4;
+  --color-muted: #9aa3b8;
 
-  --color-brand: #a597ff;
-  --color-brand-50: rgba(165, 151, 255, 0.12);
+  --color-brand: #8b7cf6;
+  --color-brand-50: rgba(139, 124, 246, 0.14);
   --color-on-brand: #0b0f19;
-  --color-nav-active: rgba(165, 151, 255, 0.08);
+  --color-nav-active: rgba(139, 124, 246, 0.10);
 
-  --color-risk-low: #5fd394;
-  --color-risk-low-bg: rgba(63, 185, 121, 0.12);
-  --color-risk-low-fg: #8be4b2;
-  --color-risk-low-bar: #3fb979;
-  --color-risk-med: #f0b44a;
-  --color-risk-med-bg: rgba(224, 160, 43, 0.12);
-  --color-risk-med-fg: #f6cb7c;
-  --color-risk-med-bar: #e0a02b;
-  --color-risk-high: #f27d7d;
-  --color-risk-high-bg: rgba(232, 99, 99, 0.13);
-  --color-risk-high-fg: #f7a3a3;
-  --color-risk-high-bar: #e86363;
+  --color-risk-low: #4ade80;
+  --color-risk-low-bg: rgba(34, 197, 94, 0.14);
+  --color-risk-low-fg: #4ade80;
+  --color-risk-low-bar: #22c55e;
+  --color-risk-med: #fbbf24;
+  --color-risk-med-bg: rgba(245, 158, 11, 0.14);
+  --color-risk-med-fg: #fbbf24;
+  --color-risk-med-bar: #f59e0b;
+  --color-risk-high: #f87171;
+  --color-risk-high-bg: rgba(239, 68, 68, 0.14);
+  --color-risk-high-fg: #f87171;
+  --color-risk-high-bar: #ef4444;
 
   --color-chart-complexity: #7fa8ff;
   --color-chart-churn: #bd98f0;
   --color-chart-loc: #4fc8d8;
   --color-chart-duplication: #ef8bc3;
   --color-chart-busfactor: #a8b5c2;
-  --color-chart-line: #a597ff;
+  --color-chart-line: #8b7cf6;
 }
 
 /* Tailwind 4 usa currentColor por defecto en los bordes: se fija al token de línea. */
@@ -105,37 +110,30 @@
 }
 
 @layer components {
-  .cv-card { @apply min-w-0 rounded-[10px] border border-line bg-surface p-5; }
+  .cv-card { @apply min-w-0 rounded-xl border border-line bg-surface p-6; }
   .cv-table-wrap { @apply overflow-x-auto; }
   .cv-table { @apply w-full min-w-[520px] border-collapse text-[13px]; }
-  .cv-th { @apply whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold text-muted; }
-  .cv-td { @apply px-3 py-3; }
+  .cv-th { @apply whitespace-nowrap px-4 py-3 text-left text-xs font-semibold text-muted; }
+  .cv-td { @apply px-4 py-3; }
   .cv-tr { @apply border-b border-line last:border-0; }
-  .cv-control { @apply rounded-lg border border-line bg-surface text-ink; }
+  .cv-control { @apply rounded-lg border border-white/15 bg-table text-ink transition-colors hover:border-white/30 focus-within:border-brand focus:border-brand; }
+  :root:not([data-theme="dark"]) .cv-control { @apply border-line bg-surface hover:border-brand/60; }
   .cv-label { @apply text-xs font-medium text-muted; }
   .cv-sticky { @apply sticky left-0 z-[1] bg-panel; }
   .cv-sticky-head { @apply sticky left-0 z-[1] bg-table; }
   .cv-eyebrow { @apply text-xs font-medium text-muted; }
-  .cv-h2 { @apply font-display text-lg font-semibold tracking-tight; }
-  .cv-btn { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-line bg-surface px-3.5 py-2 text-[13px] font-semibold text-ink transition-colors hover:border-brand hover:text-brand disabled:opacity-60; }
-  .cv-btn-primary { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-on-brand transition-opacity hover:opacity-90 disabled:opacity-50; }
+  .cv-h2 { @apply font-display text-base font-semibold; }
+  .cv-btn { @apply inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-line bg-transparent px-4 text-sm font-semibold text-ink transition-colors hover:border-brand hover:text-brand disabled:opacity-60; }
+  .cv-btn-primary { @apply inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-brand px-4 text-sm font-semibold text-on-brand transition-opacity hover:opacity-90 disabled:opacity-50; }
   .cv-seg { @apply flex rounded-lg bg-canvas p-1; }
-  .cv-seg-btn { @apply min-h-8 rounded-lg px-3 py-1 text-[13px] font-semibold text-muted transition-colors hover:text-ink aria-selected:bg-surface aria-selected:text-ink aria-selected:shadow-card; }
-  .cv-chip { @apply min-h-9 rounded-full border border-line bg-surface px-3.5 py-1.5 text-[13px] font-semibold text-soft transition-colors hover:border-brand hover:text-brand aria-pressed:border-brand aria-pressed:bg-brand aria-pressed:text-on-brand aria-selected:border-brand aria-selected:bg-brand aria-selected:text-on-brand; }
+  .cv-seg-btn { @apply min-h-8 rounded-lg px-3 py-1 text-sm font-semibold text-muted transition-colors hover:text-ink aria-selected:bg-surface aria-selected:text-ink aria-selected:shadow-card; }
+  .cv-chip { @apply h-9 rounded-lg border border-line bg-transparent px-3.5 text-sm font-semibold text-soft transition-colors hover:border-brand hover:text-brand aria-pressed:border-brand aria-pressed:bg-brand aria-pressed:text-on-brand aria-selected:border-brand aria-selected:bg-brand aria-selected:text-on-brand; }
   .cv-empty { @apply rounded-lg border border-dashed border-line bg-canvas px-4 py-10 text-center text-[13px] text-muted; }
 }
 
 html, body, #root { min-height: 100%; }
 body {
-  @apply bg-canvas font-sans text-ink antialiased; margin: 0;
-}
-/* Fondo técnico: retícula de puntos tenue y un resplandor violeta arriba a la izquierda (solo tema oscuro). */
-:root[data-theme="dark"] body {
-  background-image:
-    radial-gradient(900px 420px at 8% -8%, rgba(120, 100, 255, 0.10), transparent 70%),
-    radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: auto, 22px 22px;
-  background-attachment: fixed;
+  @apply bg-canvas font-sans text-sm text-ink antialiased; margin: 0;
 }
 .font-display { letter-spacing: -0.02em; }
 .font-code { font-family: var(--font-code); }

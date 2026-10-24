@@ -49,13 +49,13 @@ export function RepoField({ compact = false }: { compact?: boolean }) {
 export function Dock() {
   const { modules, isEmpty } = useRepo()
   return (
-    <nav aria-label="Principal" className="fixed bottom-5 left-1/2 z-30 hidden -translate-x-1/2 items-center gap-1 rounded-full border border-line bg-panel p-1.5 shadow-pop lg:flex">
+    <nav aria-label="Principal" className="fixed bottom-5 left-1/2 z-30 hidden -translate-x-1/2 items-center gap-1 rounded-xl border border-line bg-panel/70 p-1.5 backdrop-blur-xl lg:flex">
       {NAV.map((n) => (
         <NavLink
           key={n.to}
           to={n.to}
           end={n.to === '/'}
-          className={({ isActive }) => `flex min-h-10 items-center gap-2 rounded-full px-4 text-sm transition-colors ${isActive ? 'bg-brand font-semibold text-on-brand' : 'font-medium text-soft hover:bg-table hover:text-ink'}`}
+          className={({ isActive }) => `flex h-9 items-center gap-2 rounded-lg px-4 text-sm transition-colors ${isActive ? 'bg-brand font-semibold text-on-brand' : 'font-medium text-soft hover:bg-table hover:text-ink'}`}
         >
           <Icon name={n.icon} size={17} />
           {n.label}

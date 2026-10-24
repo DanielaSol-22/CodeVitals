@@ -1,0 +1,318 @@
+﻿{
+    "design":  {
+                   "cutoff_ratio":  0.7,
+                   "top_fraction":  0.2,
+                   "outcome":  "Commits de correcciÃ³n posteriores al corte",
+                   "note":  "El puntaje se calcula solo con el cÃ³digo y el historial anteriores al corte; las correcciones se cuentan despuÃ©s. La fÃ³rmula y los pesos no se modifican. Las correcciones se detectan por palabras clave del mensaje del commit (aproximaciÃ³n)."
+               },
+    "repositories":  [
+                         {
+                             "repo":  "cleo",
+                             "total_commits":  596,
+                             "past_commits":  417,
+                             "future_commits":  179,
+                             "cutoff_sha":  "c12b776a18bab1aa764e2ff6825917ce460448bc",
+                             "evaluation":  {
+                                                "n_files":  129,
+                                                "future_fixes":  20,
+                                                "top_fraction":  0.2,
+                                                "sufficient":  true,
+                                                "alpha":  0.05,
+                                                "files_with_fix":  12,
+                                                "score_vs_future_fixes":  {
+                                                                              "test":  "spearman",
+                                                                              "n":  129,
+                                                                              "alpha":  0.05,
+                                                                              "rho":  0.2882,
+                                                                              "p_value":  0.000927,
+                                                                              "significant":  true,
+                                                                              "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                                          },
+                                                "comparison":  [
+                                                                   {
+                                                                       "predictor":  "score",
+                                                                       "label":  "Puntaje de riesgo (fÃ³rmula completa)",
+                                                                       "auc":  0.7792,
+                                                                       "capture_top":  0.7,
+                                                                       "spearman":  {
+                                                                                        "test":  "spearman",
+                                                                                        "n":  129,
+                                                                                        "alpha":  0.05,
+                                                                                        "rho":  0.2882,
+                                                                                        "p_value":  0.000927,
+                                                                                        "significant":  true,
+                                                                                        "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                                                    }
+                                                                   },
+                                                                   {
+                                                                       "predictor":  "loc",
+                                                                       "label":  "Solo lÃ­neas de cÃ³digo",
+                                                                       "auc":  0.7931,
+                                                                       "capture_top":  0.7,
+                                                                       "spearman":  {
+                                                                                        "test":  "spearman",
+                                                                                        "n":  129,
+                                                                                        "alpha":  0.05,
+                                                                                        "rho":  0.3016,
+                                                                                        "p_value":  0.000514,
+                                                                                        "significant":  true,
+                                                                                        "interpretation":  "CorrelaciÃ³n positiva moderada estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                                                    },
+                                                                       "auc_diff_ci95":  {
+                                                                                             "low":  -0.0645,
+                                                                                             "high":  0.0362
+                                                                                         },
+                                                                       "score_better":  false,
+                                                                       "score_worse":  false
+                                                                   },
+                                                                   {
+                                                                       "predictor":  "cc",
+                                                                       "label":  "Solo complejidad ciclomÃ¡tica",
+                                                                       "auc":  0.7682,
+                                                                       "capture_top":  0.65,
+                                                                       "spearman":  {
+                                                                                        "test":  "spearman",
+                                                                                        "n":  129,
+                                                                                        "alpha":  0.05,
+                                                                                        "rho":  0.2785,
+                                                                                        "p_value":  0.001394,
+                                                                                        "significant":  true,
+                                                                                        "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                                                    },
+                                                                       "auc_diff_ci95":  {
+                                                                                             "low":  -0.0422,
+                                                                                             "high":  0.0662
+                                                                                         },
+                                                                       "score_better":  false,
+                                                                       "score_worse":  false
+                                                                   },
+                                                                   {
+                                                                       "predictor":  "past_commits",
+                                                                       "label":  "Solo frecuencia de cambios previa",
+                                                                       "auc":  0.7418,
+                                                                       "capture_top":  0.8,
+                                                                       "spearman":  {
+                                                                                        "test":  "spearman",
+                                                                                        "n":  129,
+                                                                                        "alpha":  0.05,
+                                                                                        "rho":  0.2534,
+                                                                                        "p_value":  0.003755,
+                                                                                        "significant":  true,
+                                                                                        "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                                                    },
+                                                                       "auc_diff_ci95":  {
+                                                                                             "low":  -0.0449,
+                                                                                             "high":  0.1187
+                                                                                         },
+                                                                       "score_better":  false,
+                                                                       "score_worse":  false
+                                                                   },
+                                                                   {
+                                                                       "predictor":  "past_fixes",
+                                                                       "label":  "Solo correcciones previas (historial de errores)",
+                                                                       "auc":  0.8002,
+                                                                       "capture_top":  0.65,
+                                                                       "spearman":  {
+                                                                                        "test":  "spearman",
+                                                                                        "n":  129,
+                                                                                        "alpha":  0.05,
+                                                                                        "rho":  0.3622,
+                                                                                        "p_value":  2.5E-05,
+                                                                                        "significant":  true,
+                                                                                        "interpretation":  "CorrelaciÃ³n positiva moderada estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                                                    },
+                                                                       "auc_diff_ci95":  {
+                                                                                             "low":  -0.1783,
+                                                                                             "high":  0.1286
+                                                                                         },
+                                                                       "score_better":  false,
+                                                                       "score_worse":  false
+                                                                   }
+                                                               ],
+                                                "by_class":  [
+                                                                 {
+                                                                     "classification":  "LOW",
+                                                                     "n":  92,
+                                                                     "mean_future_fixes":  0.054,
+                                                                     "pct_with_fix":  4.3
+                                                                 },
+                                                                 {
+                                                                     "classification":  "MEDIUM",
+                                                                     "n":  32,
+                                                                     "mean_future_fixes":  0.25,
+                                                                     "pct_with_fix":  15.6
+                                                                 },
+                                                                 {
+                                                                     "classification":  "HIGH",
+                                                                     "n":  5,
+                                                                     "mean_future_fixes":  1.4,
+                                                                     "pct_with_fix":  60.0
+                                                                 }
+                                                             ],
+                                                "kruskal":  {
+                                                                "h":  21.0107,
+                                                                "p_value":  2.7E-05,
+                                                                "significant":  true
+                                                            },
+                                                "best_baseline":  {
+                                                                      "predictor":  "past_fixes",
+                                                                      "label":  "Solo correcciones previas (historial de errores)",
+                                                                      "auc":  0.8002
+                                                                  },
+                                                "score_beats_all_baselines":  false
+                                            }
+                         }
+                     ],
+    "failed":  [
+
+               ],
+    "pooled":  {
+                   "n_files":  129,
+                   "future_fixes":  20,
+                   "top_fraction":  0.2,
+                   "sufficient":  true,
+                   "alpha":  0.05,
+                   "files_with_fix":  12,
+                   "score_vs_future_fixes":  {
+                                                 "test":  "spearman",
+                                                 "n":  129,
+                                                 "alpha":  0.05,
+                                                 "rho":  0.2882,
+                                                 "p_value":  0.000927,
+                                                 "significant":  true,
+                                                 "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                                             },
+                   "comparison":  [
+                                      {
+                                          "predictor":  "score",
+                                          "label":  "Puntaje de riesgo (fÃ³rmula completa)",
+                                          "auc":  0.7792,
+                                          "capture_top":  0.7,
+                                          "spearman":  {
+                                                           "test":  "spearman",
+                                                           "n":  129,
+                                                           "alpha":  0.05,
+                                                           "rho":  0.2882,
+                                                           "p_value":  0.000927,
+                                                           "significant":  true,
+                                                           "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                       }
+                                      },
+                                      {
+                                          "predictor":  "loc",
+                                          "label":  "Solo lÃ­neas de cÃ³digo",
+                                          "auc":  0.7931,
+                                          "capture_top":  0.7,
+                                          "spearman":  {
+                                                           "test":  "spearman",
+                                                           "n":  129,
+                                                           "alpha":  0.05,
+                                                           "rho":  0.3016,
+                                                           "p_value":  0.000514,
+                                                           "significant":  true,
+                                                           "interpretation":  "CorrelaciÃ³n positiva moderada estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                       },
+                                          "auc_diff_ci95":  {
+                                                                "low":  -0.0645,
+                                                                "high":  0.0362
+                                                            },
+                                          "score_better":  false,
+                                          "score_worse":  false
+                                      },
+                                      {
+                                          "predictor":  "cc",
+                                          "label":  "Solo complejidad ciclomÃ¡tica",
+                                          "auc":  0.7682,
+                                          "capture_top":  0.65,
+                                          "spearman":  {
+                                                           "test":  "spearman",
+                                                           "n":  129,
+                                                           "alpha":  0.05,
+                                                           "rho":  0.2785,
+                                                           "p_value":  0.001394,
+                                                           "significant":  true,
+                                                           "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                       },
+                                          "auc_diff_ci95":  {
+                                                                "low":  -0.0422,
+                                                                "high":  0.0662
+                                                            },
+                                          "score_better":  false,
+                                          "score_worse":  false
+                                      },
+                                      {
+                                          "predictor":  "past_commits",
+                                          "label":  "Solo frecuencia de cambios previa",
+                                          "auc":  0.7418,
+                                          "capture_top":  0.8,
+                                          "spearman":  {
+                                                           "test":  "spearman",
+                                                           "n":  129,
+                                                           "alpha":  0.05,
+                                                           "rho":  0.2534,
+                                                           "p_value":  0.003755,
+                                                           "significant":  true,
+                                                           "interpretation":  "CorrelaciÃ³n positiva dÃ©bil estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                       },
+                                          "auc_diff_ci95":  {
+                                                                "low":  -0.0449,
+                                                                "high":  0.1187
+                                                            },
+                                          "score_better":  false,
+                                          "score_worse":  false
+                                      },
+                                      {
+                                          "predictor":  "past_fixes",
+                                          "label":  "Solo correcciones previas (historial de errores)",
+                                          "auc":  0.8002,
+                                          "capture_top":  0.65,
+                                          "spearman":  {
+                                                           "test":  "spearman",
+                                                           "n":  129,
+                                                           "alpha":  0.05,
+                                                           "rho":  0.3622,
+                                                           "p_value":  2.5E-05,
+                                                           "significant":  true,
+                                                           "interpretation":  "CorrelaciÃ³n positiva moderada estadÃ­sticamente significativa (p \u003c 0.05)."
+                                                       },
+                                          "auc_diff_ci95":  {
+                                                                "low":  -0.1783,
+                                                                "high":  0.1286
+                                                            },
+                                          "score_better":  false,
+                                          "score_worse":  false
+                                      }
+                                  ],
+                   "by_class":  [
+                                    {
+                                        "classification":  "LOW",
+                                        "n":  92,
+                                        "mean_future_fixes":  0.054,
+                                        "pct_with_fix":  4.3
+                                    },
+                                    {
+                                        "classification":  "MEDIUM",
+                                        "n":  32,
+                                        "mean_future_fixes":  0.25,
+                                        "pct_with_fix":  15.6
+                                    },
+                                    {
+                                        "classification":  "HIGH",
+                                        "n":  5,
+                                        "mean_future_fixes":  1.4,
+                                        "pct_with_fix":  60.0
+                                    }
+                                ],
+                   "kruskal":  {
+                                   "h":  21.0107,
+                                   "p_value":  2.7E-05,
+                                   "significant":  true
+                               },
+                   "best_baseline":  {
+                                         "predictor":  "past_fixes",
+                                         "label":  "Solo correcciones previas (historial de errores)",
+                                         "auc":  0.8002
+                                     },
+                   "score_beats_all_baselines":  false
+               }
+}

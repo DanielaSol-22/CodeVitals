@@ -43,12 +43,12 @@ function TrendChart({ points, labels }: { points: number[]; labels: string[] }) 
       <svg viewBox={`0 0 ${W} ${H}`} className="block h-[140px] w-full" role="img" aria-label={`Riesgo promedio de ${points[0]} a ${points[last]} en ${points.length} análisis`}>
         <path d={area} style={{ fill: 'var(--color-chart-line)', opacity: 0.12 }} />
         <path d={line} fill="none" style={{ stroke: 'var(--color-chart-line)' }} strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" />
-        <circle cx={x(last)} cy={y(points[last])} r="4.5" style={{ fill: 'var(--color-chart-line)' }} />
+        {points.map((v, i) => <circle key={i} cx={x(i)} cy={y(v)} r={i === last ? 4.5 : 3.5} style={{ fill: i === last ? 'var(--color-chart-line)' : 'var(--color-surface)', stroke: 'var(--color-chart-line)' }} strokeWidth="2" />)}
       </svg>
-      <div className="mt-1 flex justify-between text-xs text-muted">
-        <span>{labels[0]}</span>
-        <span className="font-semibold text-ink">Último · {points[last]}</span>
+      <div className="relative mt-1 h-4 text-xs text-muted" aria-hidden="true">
+        {labels.map((l, i) => <span key={i} className="absolute whitespace-nowrap tabular-nums" style={{ left: `${(x(i) / W) * 100}%`, transform: i === 0 ? 'none' : i === last ? 'translateX(-100%)' : 'translateX(-50%)' }}>{i === 0 || i === last || points.length <= 6 ? l : ''}</span>)}
       </div>
+      <div className="mt-1 text-right text-xs font-semibold text-ink">Último · {points[last]}</div>
     </div>
   )
 }
@@ -116,7 +116,7 @@ export default function Inicio() {
         {s.commits !== null && <><span aria-hidden="true" className="text-line">|</span><span><b className="font-semibold text-ink tabular-nums">{s.commits.toLocaleString('es-GT')}</b> commits</span></>}
       </p>
 
-      <section aria-label="Riesgo global" className="cv-card flex flex-col gap-5">
+      <section aria-label="Riesgo global" className="cv-card flex flex-col gap-6">
         <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
           <div className="flex items-end gap-4">
             <span className="font-display text-[5.5rem] font-extrabold leading-[0.85] tabular-nums" style={{ color: scoreText(s.avgScore) }}>{Math.round(s.avgScore)}</span>
@@ -131,49 +131,29 @@ export default function Inicio() {
               </span>
             </div>
           </div>
-          <p className="max-w-[44ch] text-sm text-soft">{s.highCount > 0 ? `${s.highCount} ${s.highCount === 1 ? 'módulo requiere' : 'módulos requieren'} atención inmediata.` : 'Ningún módulo está en riesgo alto.'} Cada rectángulo es un módulo: más grande significa más líneas, más intenso significa más riesgo.</p>
+          <p className="max-w-[44ch] text-sm text-soft">{s.highCount > 0 ? `${s.highCount} ${s.highCount === 1 ? 'módulo requiere' : 'módulos requieren'} atención inmediata.` : 'Ningún módulo está en riesgo alto.'} Cada celda es un módulo, ordenado de mayor a menor puntaje; cuanto más intenso el color, mayor el riesgo.</p>
         </div>
         <RiskMap modules={modules} />
-        <ul className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-soft">
-          {dist.map(([l, , n]) => <li key={l} className="inline-flex items-center gap-1.5"><span aria-hidden="true" className={`h-2.5 w-2.5 rounded-sm ${LEVEL_CLASS[l].dot}`} />{LEVEL_LABEL[l]} · {n}</li>)}
-        </ul>
+        {s.totalModules > 0 && (
+          <div>
+            <div className="flex h-2 gap-0.5 overflow-hidden rounded-full" role="img" aria-label={`Bajo ${s.pct.low}%, medio ${s.pct.medium}%, alto ${s.pct.high}%`}>
+              {dist.map(([l, pct]) => pct > 0 && <div key={l} style={{ flex: pct, background: LEVEL_CLASS[l].bar }} />)}
+            </div>
+            <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-soft">
+              {dist.map(([l, pct, n]) => <li key={l} className="inline-flex items-center gap-1.5"><span aria-hidden="true" className={`h-2.5 w-2.5 rounded-sm ${LEVEL_CLASS[l].dot}`} />{LEVEL_LABEL[l]} · {pct}% ({n})</li>)}
+            </ul>
+          </div>
+        )}
       </section>
 
-      <section aria-label="Indicadores principales" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <section aria-label="Indicadores principales" className="grid grid-cols-2 gap-6 lg:grid-cols-4">
         <KpiCard label="Módulos" value={String(s.totalModules)} icon="cube" color="var(--color-brand)" sub="analizados" trend={s.trends.modules} trendGood />
         <KpiCard label="Deficiencias" value={String(s.totalDeficiencies)} icon="bug" color="var(--color-risk-high)" sub="detectadas" trend={s.trends.deficiencies} trendGood={false} />
         <KpiCard label="Alto riesgo" value={String(s.highCount)} icon="warn" color="var(--color-risk-med)" sub="requieren revisión" trend={s.trends.high} trendGood={false} />
         <KpiCard label="Bus factor promedio" value={String(s.busFactorAvg)} unit="%" icon="trend" color="var(--color-chart-complexity)" bar={s.busFactorAvg} sub="riesgo por concentración de autores" trend={s.trends.busFactor} trendGood />
       </section>
 
-      <section className="cv-card" aria-labelledby="dist-title">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 id="dist-title" className="cv-h2">Distribución de riesgo</h2>
-          <span className="text-[13px] text-muted tabular-nums">{s.totalModules} módulos</span>
-        </div>
-        {s.totalModules === 0
-          ? <p className="cv-empty">Sin datos todavía, ejecuta un análisis.</p>
-          : (
-            <>
-              <div className="flex h-3 gap-0.5 overflow-hidden rounded-full" role="img" aria-label={`Bajo ${s.pct.low}%, medio ${s.pct.medium}%, alto ${s.pct.high}%`}>
-                {dist.map(([l, pct]) => pct > 0 && <div key={l} style={{ flex: pct, background: LEVEL_CLASS[l].bar }} />)}
-              </div>
-              <ul className="mt-4 grid gap-3 sm:grid-cols-3">
-                {dist.map(([l, pct, n]) => (
-                  <li key={l} className={`flex items-center gap-3 rounded-lg px-4 py-3 ${LEVEL_CLASS[l].pill}`}>
-                    <span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-full ${LEVEL_CLASS[l].dot}`} />
-                    <div>
-                      <div className="text-xs font-semibold">{LEVEL_LABEL[l]}</div>
-                      <div className="text-base font-bold tabular-nums">{pct}% <span className="text-[13px] font-medium opacity-80">({n} {n === 1 ? 'módulo' : 'módulos'})</span></div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-[1.75fr_1fr]">
+      <section className="grid gap-6 lg:grid-cols-[1.75fr_1fr]">
         <div className="cv-card">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -233,7 +213,7 @@ export default function Inicio() {
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1.75fr_1fr]">
+      <section className="grid gap-6 lg:grid-cols-[1.75fr_1fr]">
         <div className="cv-card flex flex-col">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
