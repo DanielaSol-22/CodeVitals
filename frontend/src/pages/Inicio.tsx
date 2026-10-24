@@ -5,14 +5,13 @@ import { useRepo } from '../state/RepoContext'
 import { PageHeader } from '../components/PageHeader'
 import { StatusBanner } from '../components/StatusBanner'
 import { RiskMap } from '../components/RiskMap'
-import { KpiCard } from '../components/KPICard'
 import { Icon } from '../components/Icon'
 import { useToast } from '../components/Toast'
 import { apiClient } from '../lib/api'
 import { exportCsv } from '../lib/export'
 import { normalizeHistory } from '../lib/history'
 import { trendOf } from '../lib/trend'
-import { FACTOR_COLOR, FACTOR_LABEL, FACTOR_WEIGHT, LEVEL_CLASS, LEVEL_LABEL, levelFromScore, mainFactor, scoreColor, scoreText } from '../lib/risk'
+import { FACTOR_COLOR, FACTOR_WEIGHT, LEVEL_CLASS, LEVEL_LABEL, levelFromScore, scoreText } from '../lib/risk'
 import type { ComponentScores, RiskLevel } from '../lib/types'
 import { useMounted } from '../lib/useMounted'
 
@@ -69,7 +68,8 @@ export default function Inicio() {
   const series = useMemo(() => (hist.data ?? []).slice(-RANGES[range].n), [hist.data, range])
   const trend = useMemo(() => trendOf((hist.data ?? []).map((h) => h.score)), [hist.data])
 
-  const top = useMemo(() => [...modules].sort((a, b) => b.score - a.score).slice(0, 3), [modules])
+  const alerts = useMemo(() => modules.filter((m) => m.early?.alert).sort((a, b) => (b.early?.index ?? 0) - (a.early?.index ?? 0)), [modules])
+  const alertTop = alerts.slice(0, 5)
   const hasComponents = Object.values(s.componentAvg).some((v) => v > 0)
   const level = levelFromScore(s.avgScore)
 
@@ -80,13 +80,6 @@ export default function Inicio() {
   })
   const yMax = tab === 'score' ? 100 : Math.max(10, Math.ceil(Math.max(...bars.map((b) => b.value)) / 10) * 10)
   const suffix = tab === 'weight' ? ' %' : ''
-  const drivers = [...KEYS].sort((a, b) => s.componentAvg[b] * FACTOR_WEIGHT[b] - s.componentAvg[a] * FACTOR_WEIGHT[a]).slice(0, 2)
-
-  const levelWord = level === 'HIGH' ? 'riesgo alto' : level === 'MEDIUM' ? 'riesgo medio' : 'riesgo bajo'
-  const advice = level === 'HIGH' ? 'Prioriza de inmediato los módulos de alto riesgo y reduce su deuda técnica.'
-    : level === 'MEDIUM' ? 'Se recomienda revisar los módulos de alto riesgo y priorizar la reducción de deuda técnica.'
-      : 'Mantén las revisiones periódicas para conservar este nivel.'
-
   const deltaClass = !trend || trend.direction === 'flat' ? 'text-muted' : trend.direction === 'up' ? 'text-risk-high' : 'text-risk-low'
   const dist: [RiskLevel, number, number][] = [['LOW', s.pct.low, s.counts.low], ['MEDIUM', s.pct.medium, s.counts.medium], ['HIGH', s.pct.high, s.counts.high]]
 
@@ -131,7 +124,7 @@ export default function Inicio() {
               </span>
             </div>
           </div>
-          <p className="max-w-[44ch] text-sm text-soft">{s.highCount > 0 ? `${s.highCount} ${s.highCount === 1 ? 'módulo requiere' : 'módulos requieren'} atención inmediata.` : 'Ningún módulo está en riesgo alto.'} Cada celda es un módulo, ordenado de mayor a menor puntaje; cuanto más intenso el color, mayor el riesgo.</p>
+          <p className="max-w-[44ch] text-sm text-soft">{s.highCount > 0 ? `${s.highCount} ${s.highCount === 1 ? 'módulo tiene' : 'módulos tienen'} riesgo alto.` : 'Ningún módulo está en riesgo alto.'} Cada celda es un módulo, ordenado de mayor a menor puntaje; cuanto más intenso el color, mayor el riesgo.</p>
         </div>
         <RiskMap modules={modules} />
         {s.totalModules > 0 && (
@@ -146,14 +139,35 @@ export default function Inicio() {
         )}
       </section>
 
-      <section aria-label="Indicadores principales" className="grid grid-cols-2 gap-6 lg:grid-cols-4">
-        <KpiCard label="Módulos" value={String(s.totalModules)} icon="cube" color="var(--color-brand)" sub="analizados" trend={s.trends.modules} trendGood />
-        <KpiCard label="Deficiencias" value={String(s.totalDeficiencies)} icon="bug" color="var(--color-risk-high)" sub="detectadas" trend={s.trends.deficiencies} trendGood={false} />
-        <KpiCard label="Alto riesgo" value={String(s.highCount)} icon="warn" color="var(--color-risk-med)" sub="requieren revisión" trend={s.trends.high} trendGood={false} />
-        <KpiCard label="Bus factor promedio" value={String(s.busFactorAvg)} unit="%" icon="trend" color="var(--color-chart-complexity)" bar={s.busFactorAvg} sub="riesgo por concentración de autores" trend={s.trends.busFactor} trendGood />
+      <section aria-label="Alerta temprana" className="cv-card flex flex-col gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="cv-h2">Alerta temprana</h2>
+            <p className="mt-1 max-w-[62ch] text-[13px] text-muted">Archivos con puntaje alto y correcciones previas. Son los que conviene revisar antes de que vuelvan a fallar.</p>
+          </div>
+          <Link to="/modulos?alerta=1" className="inline-flex min-h-9 items-center gap-1.5 text-[13px] font-semibold text-brand hover:underline">
+            Ver los {alerts.length} en alerta <Icon name="arrowR" size={13} strokeWidth={2.2} />
+          </Link>
+        </div>
+        {alertTop.length === 0
+          ? <p className="cv-empty">{modules.length === 0 ? 'Sin datos todavía, ejecuta un análisis.' : 'Ningún módulo está en alerta.'}</p>
+          : (
+            <ol className="flex flex-col gap-2">
+              {alertTop.map((m) => (
+                <li key={m.path}>
+                  <Link to={`/modulos?modulo=${encodeURIComponent(m.path)}`} className="flex items-center gap-4 rounded-lg border border-line px-4 py-3 transition-colors hover:border-brand hover:bg-table">
+                    <span className="min-w-0 flex-1">
+                      <span className="font-code block truncate text-sm font-medium">{m.path}</span>
+                      <span className="block text-xs text-muted">Puntaje {Math.round(m.score)} · {m.early?.fixes ?? 0} {m.early?.fixes === 1 ? 'corrección previa' : 'correcciones previas'}</span>
+                    </span>
+                    <Icon name="chevR" size={15} strokeWidth={2} className="shrink-0 text-muted" />
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          )}
       </section>
-
-      <section className="grid gap-6 lg:grid-cols-[1.75fr_1fr]">
+      <section>
         <div className="cv-card">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -191,29 +205,9 @@ export default function Inicio() {
           )}
         </div>
 
-        <div className="cv-card flex flex-col gap-3 border-brand/40 bg-brand-50">
-          <h2 className="cv-h2 flex items-center gap-2"><Icon name="info" size={18} className="text-brand" />¿Qué significa este estado?</h2>
-          <p className="text-sm leading-relaxed text-soft">El repositorio presenta un <b className="font-semibold text-ink">{levelWord}</b> de mantenibilidad. {advice}</p>
-          {hasComponents && (
-            <div className="mt-1 flex flex-col gap-3">
-              <div className="cv-eyebrow">Lo que más pesa en el puntaje</div>
-              {drivers.map((k) => (
-                <div key={k}>
-                  <div className="flex justify-between text-[13px]"><span className="text-soft">{FACTOR_LABEL[k]}</span><b className="tabular-nums">{Math.round(s.componentAvg[k])}</b></div>
-                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface"><div className="h-full rounded-full" style={{ width: `${Math.min(100, s.componentAvg[k])}%`, background: FACTOR_COLOR[k] }} /></div>
-                </div>
-              ))}
-            </div>
-          )}
-          <div className="mt-auto pt-3">
-            <Link to="/modulos" className="cv-btn-primary w-full">
-              Ver módulos <Icon name="arrowR" size={14} strokeWidth={2.2} />
-            </Link>
-          </div>
-        </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.75fr_1fr]">
+      <section>
         <div className="cv-card flex flex-col">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -240,39 +234,6 @@ export default function Inicio() {
           </div>
         </div>
 
-        <div className="cv-card flex flex-col">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-risk-high-bg text-risk-high-fg"><Icon name="warn" size={18} /></div>
-            <div>
-              <h2 className="cv-h2">Atención inmediata</h2>
-              <div className="text-xs font-semibold text-risk-high">{s.highCount} {s.highCount === 1 ? 'módulo' : 'módulos'} de riesgo alto</div>
-            </div>
-          </div>
-          {top.length === 0
-            ? <p className="cv-empty mt-4">Sin datos todavía, ejecuta un análisis.</p>
-            : (
-              <ol className="mt-4 flex flex-col gap-2">
-                {top.map((m, i) => {
-                  const f = mainFactor(m.scores)
-                  return (
-                    <li key={m.path}>
-                      <Link to={`/modulos?modulo=${encodeURIComponent(m.path)}`} className="flex items-center gap-3 rounded-lg border border-line px-3 py-2.5 transition-colors hover:border-brand hover:bg-table">
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[13px] font-bold tabular-nums" style={{ color: scoreText(m.score), background: `color-mix(in srgb, ${scoreColor(m.score)} 16%, transparent)` }}>{i + 1}</span>
-                        <span className="min-w-0 flex-1">
-                          <span className="font-code block truncate text-[13px] font-medium">{m.path}</span>
-                          <span className="block text-xs text-muted">Puntaje {Math.round(m.score)}{f && ` · pesa más: ${FACTOR_LABEL[f].toLowerCase()}`}</span>
-                        </span>
-                        <Icon name="chevR" size={15} strokeWidth={2} className="shrink-0 text-muted" />
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ol>
-            )}
-          <Link to={s.highCount > 0 ? '/modulos?nivel=HIGH' : '/modulos'} className="cv-btn mt-auto w-full" style={{ marginTop: '1rem' }}>
-            {s.highCount > 0 ? 'Revisar módulos de riesgo alto' : 'Ver todos los módulos'} <Icon name="arrowR" size={14} strokeWidth={2.2} />
-          </Link>
-        </div>
       </section>
 
       <p className="flex items-center gap-2 text-xs text-muted"><Icon name="info" size={13} />El análisis es de solo lectura: no se modifica el repositorio original.</p>

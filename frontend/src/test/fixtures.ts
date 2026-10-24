@@ -79,7 +79,17 @@ function extra(): ModuleRow[] {
   })
 }
 
-export const FIXTURE_MODULES: ModuleRow[] = [...FIXED.map(build), ...extra()]
+/** Alerta temprana de ejemplo: 0.4·posición del puntaje + 0.6·posición de las correcciones previas; el 20 % superior queda en alerta. */
+function withEarly(mods: ModuleRow[]): ModuleRow[] {
+  const fixes = mods.map((m) => Math.max(0, Math.round((m.churn * (m.cc % 7)) / 9)))
+  const pr = (v: number[]) => v.map((x) => v.filter((y) => y < x).length / Math.max(1, v.length - 1))
+  const ps = pr(mods.map((m) => m.score)), pf = pr(fixes)
+  const idx = mods.map((_, i) => Math.round(1000 * (0.4 * ps[i] + 0.6 * pf[i])) / 10)
+  const top = new Set([...idx.keys()].sort((a, b) => idx[b] - idx[a]).slice(0, Math.ceil(mods.length * 0.2)))
+  return mods.map((m, i) => ({ ...m, early: { index: idx[i], alert: top.has(i), fixes: fixes[i], rank: 0 } }))
+}
+
+export const FIXTURE_MODULES: ModuleRow[] = withEarly([...FIXED.map(build), ...extra()])
 
 export const FIXTURE_SUMMARY: RepoSummary = {
   name: 'orion-platform',

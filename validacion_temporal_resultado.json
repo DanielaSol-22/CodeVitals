@@ -129,6 +129,28 @@
             "score_worse": false
           }
         ],
+        "early_warning": {
+          "label": "Índice de alerta temprana (puntaje + correcciones previas)",
+          "auc": 0.7644,
+          "capture_top": 0.8508,
+          "spearman": {
+            "test": "spearman",
+            "n": 230,
+            "alpha": 0.05,
+            "rho": 0.3796,
+            "p_value": 0.0,
+            "significant": true,
+            "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+          },
+          "auc_diff_vs_score_ci95": {
+            "low": -0.0604,
+            "high": 0.0173
+          },
+          "auc_diff_vs_past_fixes_ci95": {
+            "low": 0.0279,
+            "high": 0.1053
+          }
+        },
         "by_class": [
           {
             "classification": "LOW",
@@ -285,6 +307,28 @@
             "score_worse": true
           }
         ],
+        "early_warning": {
+          "label": "Índice de alerta temprana (puntaje + correcciones previas)",
+          "auc": 0.8505,
+          "capture_top": 0.8321,
+          "spearman": {
+            "test": "spearman",
+            "n": 107,
+            "alpha": 0.05,
+            "rho": 0.4867,
+            "p_value": 0.0,
+            "significant": true,
+            "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+          },
+          "auc_diff_vs_score_ci95": {
+            "low": 0.1115,
+            "high": 0.324
+          },
+          "auc_diff_vs_past_fixes_ci95": {
+            "low": -0.1158,
+            "high": -0.0168
+          }
+        },
         "by_class": [
           {
             "classification": "LOW",
@@ -441,6 +485,28 @@
             "score_worse": false
           }
         ],
+        "early_warning": {
+          "label": "Índice de alerta temprana (puntaje + correcciones previas)",
+          "auc": 0.7855,
+          "capture_top": 0.5,
+          "spearman": {
+            "test": "spearman",
+            "n": 67,
+            "alpha": 0.05,
+            "rho": 0.436,
+            "p_value": 0.000226,
+            "significant": true,
+            "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+          },
+          "auc_diff_vs_score_ci95": {
+            "low": -0.0895,
+            "high": 0.0745
+          },
+          "auc_diff_vs_past_fixes_ci95": {
+            "low": -0.0045,
+            "high": 0.1126
+          }
+        },
         "by_class": [
           {
             "classification": "LOW",
@@ -472,20 +538,6 @@
           "auc": 0.7855
         },
         "score_beats_all_baselines": false
-      }
-    },
-    {
-      "repo": "itsdangerous",
-      "total_commits": 677,
-      "past_commits": 473,
-      "future_commits": 204,
-      "cutoff_sha": "faa28bccc85ee47a8274536dd3649a0b67d0a75b",
-      "evaluation": {
-        "n_files": 16,
-        "future_fixes": 2,
-        "top_fraction": 0.2,
-        "sufficient": false,
-        "note": "Muestra insuficiente: 16 archivos y 2 correcciones posteriores al corte (se necesitan al menos 10 archivos y 10 correcciones)."
       }
     },
     {
@@ -611,6 +663,28 @@
             "score_worse": false
           }
         ],
+        "early_warning": {
+          "label": "Índice de alerta temprana (puntaje + correcciones previas)",
+          "auc": 0.8923,
+          "capture_top": 0.7442,
+          "spearman": {
+            "test": "spearman",
+            "n": 151,
+            "alpha": 0.05,
+            "rho": 0.6028,
+            "p_value": 0.0,
+            "significant": true,
+            "interpretation": "Correlación positiva fuerte estadísticamente significativa (p < 0.05)."
+          },
+          "auc_diff_vs_score_ci95": {
+            "low": -0.0697,
+            "high": 0.0095
+          },
+          "auc_diff_vs_past_fixes_ci95": {
+            "low": 0.024,
+            "high": 0.0825
+          }
+        },
         "by_class": [
           {
             "classification": "LOW",
@@ -642,20 +716,6 @@
           "auc": 0.9403
         },
         "score_beats_all_baselines": false
-      }
-    },
-    {
-      "repo": "prettytable",
-      "total_commits": 836,
-      "past_commits": 585,
-      "future_commits": 251,
-      "cutoff_sha": "c1fd089e900ba088c73fb680441b98e339f2babc",
-      "evaluation": {
-        "n_files": 5,
-        "future_fixes": 31,
-        "top_fraction": 0.2,
-        "sufficient": false,
-        "note": "Muestra insuficiente: 5 archivos y 31 correcciones posteriores al corte (se necesitan al menos 10 archivos y 10 correcciones)."
       }
     },
     {
@@ -781,6 +841,28 @@
             "score_worse": true
           }
         ],
+        "early_warning": {
+          "label": "Índice de alerta temprana (puntaje + correcciones previas)",
+          "auc": 0.8165,
+          "capture_top": 0.8673,
+          "spearman": {
+            "test": "spearman",
+            "n": 297,
+            "alpha": 0.05,
+            "rho": 0.2342,
+            "p_value": 4.6e-05,
+            "significant": true,
+            "interpretation": "Correlación positiva débil estadísticamente significativa (p < 0.05)."
+          },
+          "auc_diff_vs_score_ci95": {
+            "low": 0.1278,
+            "high": 0.4486
+          },
+          "auc_diff_vs_past_fixes_ci95": {
+            "low": -0.0896,
+            "high": 0.0025
+          }
+        },
         "by_class": [
           {
             "classification": "LOW",
@@ -937,6 +1019,28 @@
             "score_worse": false
           }
         ],
+        "early_warning": {
+          "label": "Índice de alerta temprana (puntaje + correcciones previas)",
+          "auc": 0.834,
+          "capture_top": 0.7,
+          "spearman": {
+            "test": "spearman",
+            "n": 129,
+            "alpha": 0.05,
+            "rho": 0.3418,
+            "p_value": 7.4e-05,
+            "significant": true,
+            "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+          },
+          "auc_diff_vs_score_ci95": {
+            "low": -0.0328,
+            "high": 0.1685
+          },
+          "auc_diff_vs_past_fixes_ci95": {
+            "low": -0.0315,
+            "high": 0.1057
+          }
+        },
         "by_class": [
           {
             "classification": "LOW",
@@ -1093,6 +1197,28 @@
             "score_worse": false
           }
         ],
+        "early_warning": {
+          "label": "Índice de alerta temprana (puntaje + correcciones previas)",
+          "auc": 0.796,
+          "capture_top": 0.7576,
+          "spearman": {
+            "test": "spearman",
+            "n": 49,
+            "alpha": 0.05,
+            "rho": 0.5276,
+            "p_value": 9.8e-05,
+            "significant": true,
+            "interpretation": "Correlación positiva fuerte estadísticamente significativa (p < 0.05)."
+          },
+          "auc_diff_vs_score_ci95": {
+            "low": -0.102,
+            "high": 0.0189
+          },
+          "auc_diff_vs_past_fixes_ci95": {
+            "low": 0.0072,
+            "high": 0.1174
+          }
+        },
         "by_class": [
           {
             "classification": "LOW",
@@ -1124,6 +1250,34 @@
           "auc": 0.8566
         },
         "score_beats_all_baselines": false
+      }
+    },
+    {
+      "repo": "itsdangerous",
+      "total_commits": 677,
+      "past_commits": 473,
+      "future_commits": 204,
+      "cutoff_sha": "faa28bccc85ee47a8274536dd3649a0b67d0a75b",
+      "evaluation": {
+        "n_files": 16,
+        "future_fixes": 2,
+        "top_fraction": 0.2,
+        "sufficient": false,
+        "note": "Muestra insuficiente: 16 archivos y 2 correcciones posteriores al corte (se necesitan al menos 10 archivos y 10 correcciones)."
+      }
+    },
+    {
+      "repo": "prettytable",
+      "total_commits": 836,
+      "past_commits": 585,
+      "future_commits": 251,
+      "cutoff_sha": "c1fd089e900ba088c73fb680441b98e339f2babc",
+      "evaluation": {
+        "n_files": 5,
+        "future_fixes": 31,
+        "top_fraction": 0.2,
+        "sufficient": false,
+        "note": "Muestra insuficiente: 5 archivos y 31 correcciones posteriores al corte (se necesitan al menos 10 archivos y 10 correcciones)."
       }
     }
   ],
@@ -1175,8 +1329,8 @@
           "interpretation": "Correlación positiva débil estadísticamente significativa (p < 0.05)."
         },
         "auc_diff_ci95": {
-          "low": 0.0056,
-          "high": 0.0551
+          "low": 0.0067,
+          "high": 0.0558
         },
         "score_better": true,
         "score_worse": false
@@ -1196,8 +1350,8 @@
           "interpretation": "Correlación positiva débil estadísticamente significativa (p < 0.05)."
         },
         "auc_diff_ci95": {
-          "low": 0.0207,
-          "high": 0.0644
+          "low": 0.0215,
+          "high": 0.0648
         },
         "score_better": true,
         "score_worse": false
@@ -1217,8 +1371,8 @@
           "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
         },
         "auc_diff_ci95": {
-          "low": -0.1235,
-          "high": -0.0571
+          "low": -0.1233,
+          "high": -0.0582
         },
         "score_better": false,
         "score_worse": true
@@ -1238,13 +1392,35 @@
           "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
         },
         "auc_diff_ci95": {
-          "low": -0.1171,
-          "high": -0.0408
+          "low": -0.1155,
+          "high": -0.0399
         },
         "score_better": false,
         "score_worse": true
       }
     ],
+    "early_warning": {
+      "label": "Índice de alerta temprana (puntaje + correcciones previas)",
+      "auc": 0.8076,
+      "capture_top": 0.8388,
+      "spearman": {
+        "test": "spearman",
+        "n": 1051,
+        "alpha": 0.05,
+        "rho": 0.399,
+        "p_value": 0.0,
+        "significant": true,
+        "interpretation": "Correlación positiva moderada estadísticamente significativa (p < 0.05)."
+      },
+      "auc_diff_vs_score_ci95": {
+        "low": 0.0362,
+        "high": 0.0947
+      },
+      "auc_diff_vs_past_fixes_ci95": {
+        "low": -0.0338,
+        "high": 0.0095
+      }
+    },
     "by_class": [
       {
         "classification": "LOW",
@@ -1276,7 +1452,5 @@
       "auc": 0.8327
     },
     "score_beats_all_baselines": false
-  },
-  "generated": "2026-10-23",
-  "source": "9 repositorios de la validación (clonados el 2026-10-23; el HEAD puede tener más commits que en el análisis original)"
+  }
 }

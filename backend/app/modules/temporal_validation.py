@@ -35,6 +35,7 @@ import numpy as np
 from scipy import stats
 
 from app.modules.git_analyzer import is_fix_commit, resolve_identities
+from app.modules.risk_detector import early_warning_index
 from app.modules.metrics_calculator import MetricsCalculator
 from app.modules.risk_detector import RiskDetector
 from app.modules.statistics_analyzer import ALPHA_DEFAULT, spearman
@@ -256,6 +257,19 @@ def evaluate(rows: list[dict], alpha: float = ALPHA_DEFAULT, fraction: float = T
         except ValueError:
             kruskal = None
 
+    early_item = None
+    if all("early" in r for r in rows):
+        early = [r["early"] for r in rows]
+        a = auc(early, has_fix)
+        c = capture_at_top(early, fixes, fraction)
+        early_item = {
+            "label": "Índice de alerta temprana (puntaje + correcciones previas)",
+            "auc": None if a is None else round(a, 4), "capture_top": None if c is None else round(c, 4),
+            "spearman": spearman(early, fixes, alpha),
+            "auc_diff_vs_score_ci95": _bootstrap_auc_diff(early, preds["score"], has_fix),
+            "auc_diff_vs_past_fixes_ci95": _bootstrap_auc_diff(early, preds["past_fixes"], has_fix),
+        }
+
     score_item = comparison[0]
     best_other = max((c for c in comparison[1:] if c["auc"] is not None), key=lambda c: c["auc"], default=None)
     return {
@@ -263,6 +277,7 @@ def evaluate(rows: list[dict], alpha: float = ALPHA_DEFAULT, fraction: float = T
         "files_with_fix": int(sum(has_fix)),
         "score_vs_future_fixes": score_item["spearman"],
         "comparison": comparison,
+        "early_warning": early_item,
         "by_class": by_class,
         "kruskal": kruskal,
         "best_baseline": None if best_other is None else {"predictor": best_other["predictor"], "label": best_other["label"],
@@ -304,6 +319,9 @@ def temporal_rows(repo: str, ratio: float = CUTOFF_DEFAULT) -> dict[str, Any]:
             "past_commits": h["commits"], "past_fixes": h["fixes"],
             "future_commits": o["commits"], "future_fixes": o["fixes"],
         })
+    # Índice de alerta temprana: puntaje + correcciones previas, relativos al repositorio.
+    for r, e in zip(rows, early_warning_index([r["score"] for r in rows], [r["past_fixes"] for r in rows])):
+        r["early"] = e
     return {**cut, "rows": rows}
 
 

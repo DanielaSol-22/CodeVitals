@@ -20,7 +20,7 @@ from app.database import get_db
 from app.modules.deficiency_info import describe_deficiencies
 from app.modules.git_analyzer import GitAnalyzer
 from app.modules.metrics_calculator import MetricsCalculator
-from app.modules.risk_detector import RiskDetector
+from app.modules.risk_detector import RiskDetector, attach_early_warning
 from app.schemas import RiskModuleRequest, RiskRepositoryRequest
 
 router = APIRouter(prefix="/api/v1/risk", tags=["Risk Detection (Dashboard)"])
@@ -160,6 +160,21 @@ def _analyze_all_modules(repo_url: str, repo_path: str | None) -> tuple[list[dic
 _ANALYSIS_SLOTS = threading.BoundedSemaphore(get_settings().max_parallel_analyses)
 
 
+_COMPONENT_KEYS = {
+    "complexity": "cyclomatic_complexity", "churn": "code_churn", "loc": "lines_of_code",
+    "duplication": "code_duplication", "bus_factor": "bus_factor",
+}
+
+
+def _average_components(modules: list[dict]) -> dict:
+    """Promedio de cada uno de los 5 componentes de la fórmula, con los nombres que usa la interfaz."""
+    n = len(modules) or 1
+    return {
+        out: round(sum(m["risk_analysis"].get("component_scores", {}).get(src, 0) for m in modules) / n, 2)
+        for out, src in _COMPONENT_KEYS.items()
+    }
+
+
 def _analyze_uncached(repo_url: str, repo_path: str | None) -> tuple[list[dict], GitAnalyzer, int]:
     with _ANALYSIS_SLOTS:
         return _analyze_uncached_unlimited(repo_url, repo_path)
@@ -200,6 +215,7 @@ def _analyze_uncached_unlimited(repo_url: str, repo_path: str | None) -> tuple[l
         git_metrics = _git_metrics_for_file(git, file_path, bus_factor_risk)
         modules.append(_risk_detector.analyze_module(file_path, file_metrics, git_metrics))
 
+    attach_early_warning(modules)
     return modules, git, repo_total_commits
 
 
@@ -250,6 +266,7 @@ async def risk_repository(payload: RiskRepositoryRequest, db: AsyncSession = Dep
             "recommended_action": _risk_detector._recommend_action(m["risk_analysis"]["classification"]),
             "recommended_actions": [r["action"] for r in m.get("recommendations", [])],
             "recommendations": m.get("recommendations", []),
+            "early_warning": m.get("early_warning"),
         }
         for m in risky[:10]
     ]
@@ -263,6 +280,8 @@ async def risk_repository(payload: RiskRepositoryRequest, db: AsyncSession = Dep
         "medium_risk_percentage": round(medium / total * 100, 2) if total else 0,
         "low_risk_percentage": round(low / total * 100, 2) if total else 0,
         "metrics": repo_analysis["average_component_scores"],
+        "average_component_scores": _average_components(modules),
+        "early_warning_count": sum(1 for m in modules if m.get("early_warning", {}).get("alert")),
         "top_risk_modules": top_risk_modules,
         "repository_total_commits": repo_total_commits,
         "meets_minimum_history": repo_total_commits >= MIN_COMMITS_REQUIRED,
@@ -362,8 +381,20 @@ def risk_priority(payload: RiskRepositoryRequest):
         raise HTTPException(status_code=400, detail=repo_analysis["message"])
 
     priority = _risk_detector.generate_priority_list(repo_analysis, payload.limit)
+    # Los módulos en alerta temprana siempre se incluyen, aunque su puntaje sea bajo: ya fallaron antes.
+    listed = {p["file"] for p in priority}
+    for m in modules:
+        if m.get("early_warning", {}).get("alert") and m["file"] not in listed:
+            risk = m["risk_analysis"]
+            priority.append({
+                "priority": len(priority) + 1, "file": m["file"], "risk_score": risk["risk_score"],
+                "classification": risk["classification"],
+                "deficiencies_count": len(m.get("code_metrics", {}).get("deficiencies", [])),
+                "action": _risk_detector._recommend_action(risk["classification"]),
+            })
     recs_by_file = {m["file"]: m.get("recommendations", []) for m in modules}
     defs_by_file = {m["file"]: describe_deficiencies(m.get("code_metrics", {}).get("deficiencies", [])) for m in modules}
+    early_by_file = {m["file"]: m.get("early_warning") for m in modules}
 
     return {
         "modules": [
@@ -375,6 +406,7 @@ def risk_priority(payload: RiskRepositoryRequest):
                 "deficiencies": defs_by_file.get(p["file"], []),
                 "recommended_actions": [r["action"] for r in recs_by_file.get(p["file"], [])] or [p["action"]],
                 "recommendations": recs_by_file.get(p["file"], []),
+                "early_warning": early_by_file.get(p["file"]),
             }
             for p in priority
         ]

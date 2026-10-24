@@ -59,36 +59,42 @@ export function TeamRisk({ risk }: { risk: number }) {
   )
 }
 
-export const GRID = 'lg:grid-cols-[minmax(0,2.4fr)_96px_64px_136px_84px_72px_84px_20px]'
+export const GRID = 'lg:grid-cols-[minmax(0,1fr)_96px_88px_72px_20px]'
+
+/** Marca de alerta temprana: solo aparece en los módulos del 20 % superior del repositorio. */
+export function AlertTag({ early }: { early?: ModuleRow['early'] }) {
+  if (!early?.alert) return <span className="text-muted" aria-label="Sin alerta">–</span>
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-lg bg-brand/15 px-2.5 py-1 text-xs font-semibold text-brand" title={`Índice de alerta temprana: ${Math.round(early.index)} · ${early.fixes} correcciones previas`}>
+      <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-brand" />Alerta
+    </span>
+  )
+}
 
 export const ModuleCard = memo(function ModuleCard({ m, onOpen }: { m: ModuleRow; onOpen: (m: ModuleRow, opener: HTMLElement) => void }) {
   const i = m.path.lastIndexOf('/')
   const dir = i >= 0 ? m.path.slice(0, i + 1) : ''
   const name = i >= 0 ? m.path.slice(i + 1) : m.path
-  const heat = m.scores?.complexity > 0 ? m.scores.complexity : Math.min(100, (m.cc / 30) * 100)
   return (
     <div
       role="row"
       onClick={(e) => onOpen(m, e.currentTarget)}
-      className={`grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 rounded-[10px] border border-line bg-surface px-4 py-4 transition-colors hover:border-brand/60 hover:bg-table ${GRID} lg:gap-y-0`}
+      className={`grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 rounded-xl border border-line bg-surface px-5 py-4 transition-colors hover:border-brand/60 hover:bg-table ${GRID} lg:gap-y-0`}
     >
       <div role="cell" className="min-w-0">
-        <button onClick={(e) => { e.stopPropagation(); onOpen(m, e.currentTarget) }} className="flex max-w-full items-center gap-2.5 text-left" aria-label={m.path}>
+        <button onClick={(e) => { e.stopPropagation(); onOpen(m, e.currentTarget) }} className="flex max-w-full items-center gap-3 text-left" aria-label={m.path}>
           <LangIcon path={m.path} />
           <span className="min-w-0">
-            <span className="font-code block truncate text-[13px] font-medium text-ink">{name}</span>
+            <span className="font-code block truncate text-sm font-medium text-ink">{name}</span>
             {dir && <span className="block truncate text-xs text-muted">{dir}</span>}
           </span>
         </button>
       </div>
       <div role="cell" className="justify-self-end lg:justify-self-start"><RiskPill level={m.level} /></div>
+      <div role="cell"><AlertTag early={m.early} /></div>
       <div role="cell" className="font-display text-base font-bold tabular-nums lg:text-right" style={{ color: scoreText(m.score) }}>
         <span className="mr-1.5 text-xs font-normal text-muted lg:hidden">Puntaje</span>{Math.round(m.score)}
       </div>
-      <div role="cell" className="flex items-center gap-2 text-xs text-muted"><span className="lg:hidden">CC</span><HeatBar value={heat} label={`Complejidad ciclomática: ${m.cc}`} text={String(m.cc)} /></div>
-      <div role="cell" className="flex items-center gap-2 text-xs text-muted"><span className="lg:hidden">Equipo</span><TeamRisk risk={m.busFactor} /></div>
-      <div role="cell" className="text-sm tabular-nums text-soft lg:text-right"><span className="mr-1.5 text-xs text-muted lg:hidden">Cambios</span>{m.churn}</div>
-      <div role="cell" className="text-sm tabular-nums text-soft lg:text-right"><span className="mr-1.5 text-xs text-muted lg:hidden">Deficiencias</span>{m.deficiencies}</div>
       <div role="cell" className="hidden text-muted lg:block"><Icon name="chevR" size={16} strokeWidth={2} /></div>
     </div>
   )

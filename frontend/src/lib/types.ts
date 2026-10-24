@@ -53,6 +53,8 @@ export interface ModuleRow {
   actions: string[]
   justification?: string
   recommendations?: Recommendation[]
+  /** Alerta temprana: puntaje + correcciones previas, relativo al repositorio (0-100). */
+  early?: { index: number; alert: boolean; fixes: number; rank: number }
   commits: CommitRef[]
 }
 

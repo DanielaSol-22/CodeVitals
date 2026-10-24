@@ -65,6 +65,12 @@ export function normalizeDeficiencies(raw: unknown): Deficiency[] {
     }))
 }
 
+function normalizeEarly(e: unknown): ModuleRow['early'] {
+  if (!e || typeof e !== 'object') return undefined
+  const r = e as Raw
+  return { index: num(r.index), alert: r.alert === true, fixes: num(r.fix_commits), rank: num(r.rank) }
+}
+
 export function normalizeModule(raw: Raw): ModuleRow {
   const score = num(pick(raw, 'risk_score', 'score', 'risk'))
   const code = pick(raw, 'code_metrics', 'metrics') ?? {}
@@ -89,6 +95,7 @@ export function normalizeModule(raw: Raw): ModuleRow {
     actions: Array.isArray(actions) ? actions.map(String) : [],
     justification: typeof raw.justification === 'string' ? raw.justification : undefined,
     recommendations: normalizeRecommendations(raw.recommendations),
+    early: normalizeEarly(raw.early_warning),
     commits: Array.isArray(commits)
       ? commits.slice(0, 5).map((c: Raw) => ({
           hash: String(pick(c, 'hash', 'sha') ?? '').slice(0, 7),

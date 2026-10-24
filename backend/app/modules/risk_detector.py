@@ -2,11 +2,54 @@
 Detector de Riesgos
 Implementa la fórmula ponderada de riesgo para análisis de mantenibilidad
 """
+import math
 from typing import Dict, List, Any, Tuple
+
+import numpy as np
+from scipy.stats import rankdata
 
 
 # Commits a partir de los cuales el componente de frecuencia llega a 100 (tope de normalización).
 CHURN_MAX_COMMITS = 20
+
+
+# Índice de alerta temprana: combina el puntaje con el historial de correcciones del archivo.
+# El peso 0.6 se eligió por validación dejando un repositorio fuera (resultó 0.6 en los 7 casos).
+EARLY_WEIGHT_SCORE = 0.4
+EARLY_WEIGHT_FIXES = 0.6
+EARLY_ALERT_FRACTION = 0.20  # se marca como alerta el 20 % superior del repositorio
+
+
+def _percentile_ranks(values: List[float]) -> np.ndarray:
+    """Posición relativa (0 a 1) de cada valor dentro del repositorio; los empates comparten el promedio."""
+    arr = np.asarray(values, dtype=float)
+    if len(arr) <= 1:
+        return np.zeros(len(arr))
+    return (rankdata(arr) - 1) / (len(arr) - 1)
+
+
+def early_warning_index(scores: List[float], fixes: List[float]) -> List[float]:
+    """Índice de alerta temprana (0 a 100) de cada archivo: 0.4·posición del puntaje + 0.6·posición de
+    sus correcciones previas, ambas relativas al propio repositorio. La fórmula del puntaje no cambia."""
+    ps, pf = _percentile_ranks(scores), _percentile_ranks(fixes)
+    return [round(float(100 * (EARLY_WEIGHT_SCORE * a + EARLY_WEIGHT_FIXES * b)), 1) for a, b in zip(ps, pf)]
+
+
+def attach_early_warning(modules: List[Dict[str, Any]]) -> None:
+    """Agrega a cada módulo `early_warning` = {index, alert, fix_commits, rank}. `alert` marca el 20 % superior."""
+    if not modules:
+        return
+    scores = [m["risk_analysis"]["risk_score"] for m in modules]
+    fixes = [m.get("git_metrics", {}).get("fix_commits", 0) for m in modules]
+    index = early_warning_index(scores, fixes)
+    order = sorted(range(len(modules)), key=lambda i: (-index[i], -scores[i]))
+    n_alert = max(1, math.ceil(EARLY_ALERT_FRACTION * len(modules)))
+    alert_ids = set(order[:n_alert])
+    for rank, i in enumerate(order, start=1):
+        modules[i]["early_warning"] = {
+            "index": index[i], "alert": i in alert_ids,
+            "fix_commits": int(fixes[i]), "rank": rank,
+        }
 
 
 class RiskDetector:

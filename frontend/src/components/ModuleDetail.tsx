@@ -47,6 +47,7 @@ export function ModuleDetail({ module: m, onClose }: { module: ModuleRow; onClos
   }, [onClose])
 
   const summary: [string, string][] = [
+    ...(m.early ? [['Alerta temprana', m.early.alert ? `En alerta (${Math.round(m.early.index)})` : `${Math.round(m.early.index)}`] as [string, string], ['Correcciones previas', String(m.early.fixes)] as [string, string]] : []),
     ['Complejidad (CC)', String(m.cc)],
     ['Frecuencia de cambios (commits)', String(m.churn)],
     ...(m.churnLines ? [['Code churn (líneas)', m.churnLines.toLocaleString('es-GT')] as [string, string]] : []),

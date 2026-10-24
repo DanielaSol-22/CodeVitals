@@ -13,8 +13,8 @@ import { useToast } from '../components/Toast'
 import type { ModuleRow, RiskLevel } from '../lib/types'
 
 const PAGE = 10
-type SortKey = 'score' | 'level' | 'cc' | 'churn' | 'busFactor' | 'deficiencies'
-const SORT_KEYS: SortKey[] = ['score', 'level', 'cc', 'churn', 'busFactor', 'deficiencies']
+type SortKey = 'score' | 'level' | 'early'
+const SORT_KEYS: SortKey[] = ['score', 'level', 'early']
 const LEVELS: RiskLevel[] = ['HIGH', 'MEDIUM', 'LOW']
 const RANK: Record<RiskLevel, number> = { HIGH: 3, MEDIUM: 2, LOW: 1 }
 
@@ -29,7 +29,11 @@ export default function Modulos() {
   const levelParam = params.get('nivel')
   const level: RiskLevel | 'ALL' = LEVELS.includes(levelParam as RiskLevel) ? (levelParam as RiskLevel) : 'ALL'
   const [sortKeyRaw, sortDirRaw] = (params.get('orden') ?? '').split(':')
-  const sort = SORT_KEYS.includes(sortKeyRaw as SortKey) ? { key: sortKeyRaw as SortKey, dir: sortDirRaw === 'asc' ? (1 as const) : (-1 as const) } : null
+  const explicitSort = SORT_KEYS.includes(sortKeyRaw as SortKey) ? { key: sortKeyRaw as SortKey, dir: sortDirRaw === 'asc' ? (1 as const) : (-1 as const) } : null
+  // Sin orden elegido, la lista abre por alerta temprana (los que más conviene revisar primero).
+  const hasEarly = modules.some((m) => m.early)
+  const sort = explicitSort ?? (hasEarly ? { key: 'early' as SortKey, dir: -1 as const } : null)
+  const onlyAlert = params.get('alerta') === '1'
   const pageParam = Math.max(1, Number(params.get('pagina')) || 1)
   const selectedPath = params.get('modulo')
 
@@ -45,6 +49,7 @@ export default function Modulos() {
   )
 
   const counts = useMemo(() => ({
+    ALERT: modules.filter((m) => m.early?.alert).length,
     HIGH: modules.filter((m) => m.level === 'HIGH').length,
     MEDIUM: modules.filter((m) => m.level === 'MEDIUM').length,
     LOW: modules.filter((m) => m.level === 'LOW').length,
@@ -52,14 +57,14 @@ export default function Modulos() {
   const deferredQ = useDeferredValue(q)
   const rows = useMemo(() => {
     const needle = deferredQ.toLowerCase()
-    let r = modules.filter((m) => m.path.toLowerCase().includes(needle) && (level === 'ALL' || m.level === level))
+    let r = modules.filter((m) => m.path.toLowerCase().includes(needle) && (level === 'ALL' || m.level === level) && (!onlyAlert || m.early?.alert))
     if (sort) {
-      const val = (m: ModuleRow) => (sort.key === 'level' ? RANK[m.level] : m[sort.key])
+      const val = (m: ModuleRow) => (sort.key === 'level' ? RANK[m.level] : sort.key === 'early' ? (m.early?.index ?? 0) : m.score)
       r = [...r].sort((a, b) => (val(a) - val(b)) * sort.dir)
     }
     return r
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modules, deferredQ, level, sort?.key, sort?.dir])
+  }, [modules, deferredQ, level, onlyAlert, sort?.key, sort?.dir])
 
   const pages = Math.max(1, Math.ceil(rows.length / PAGE))
   const cur = Math.min(pageParam, pages)
@@ -88,19 +93,21 @@ export default function Modulos() {
       <PageHeader
         section="módulos"
         title="Módulos con mayor riesgo"
-        subtitle="Cada archivo es un módulo. Busca desde la barra de comandos de arriba."
+        subtitle="Los módulos en alerta combinan su puntaje con sus correcciones previas: son los que conviene revisar primero."
       />
       <StatusBanner />
 
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filtrar por nivel de riesgo">
-          {(['ALL', ...LEVELS] as const).map((l) => {
+          {(['ALL', 'ALERT', ...LEVELS] as const).map((l) => {
+            if (l === 'ALERT' && !hasEarly) return null
             const n = l === 'ALL' ? modules.length : counts[l]
-            const active = level === l
+            const active = l === 'ALERT' ? onlyAlert : l === 'ALL' ? level === 'ALL' && !onlyAlert : level === l
+            const label = l === 'ALL' ? 'Todos' : l === 'ALERT' ? 'En alerta' : LEVEL_LABEL[l]
+            const go = () => patch(l === 'ALERT' ? { alerta: onlyAlert ? null : '1', nivel: null, pagina: null } : { nivel: l === 'ALL' ? null : l, alerta: null, pagina: null })
             return (
-              <button key={l} type="button" aria-pressed={active} onClick={() => patch({ nivel: l === 'ALL' ? null : l, pagina: null })}
-                className="cv-chip">
-                {l === 'ALL' ? 'Todos' : LEVEL_LABEL[l]} <span className="tabular-nums opacity-80">({n})</span>
+              <button key={l} type="button" aria-pressed={active} onClick={go} className="cv-chip">
+                {label} <span className="tabular-nums opacity-80">({n})</span>
               </button>
             )
           })}
@@ -108,15 +115,15 @@ export default function Modulos() {
             className="cv-chip ml-auto inline-flex items-center gap-1.5 disabled:opacity-50">
             Exportar CSV ({rows.length})
           </button>
-          {(q || level !== 'ALL' || sort) && (
-            <button type="button" onClick={() => patch({ q: null, nivel: null, orden: null, pagina: null })} className="min-h-9 px-2 text-[13px] font-semibold text-brand hover:underline">Limpiar filtros</button>
+          {(q || level !== 'ALL' || onlyAlert || explicitSort) && (
+            <button type="button" onClick={() => patch({ q: null, nivel: null, alerta: null, orden: null, pagina: null })} className="min-h-9 px-2 text-[13px] font-semibold text-brand hover:underline">Limpiar filtros</button>
           )}
         </div>
         <div role="table" aria-label="Módulos del repositorio ordenados por riesgo" className="flex flex-col gap-2">
           <div role="rowgroup">
             <div role="row" className={`hidden gap-x-4 px-4 pb-1 text-xs font-medium text-muted lg:grid ${GRID}`}>
               <div role="columnheader">Módulo</div>
-              {th('level', 'Riesgo')}{th('score', 'Puntaje', 'Puntaje de riesgo (0-100)', true)}{th('cc', 'CC', 'Complejidad ciclomática')}{th('busFactor', 'Equipo', 'Riesgo por concentración de autores (bus factor)')}{th('churn', 'Cambios', 'Frecuencia de cambios', true)}{th('deficiencies', 'Deficiencias', undefined, true)}
+              {th('level', 'Riesgo')}{th('early', 'Alerta', 'Alerta temprana: puntaje de riesgo + correcciones previas del archivo')}{th('score', 'Puntaje', 'Puntaje de riesgo (0-100)', true)}
               <div role="columnheader"><span className="sr-only">Abrir</span></div>
             </div>
           </div>

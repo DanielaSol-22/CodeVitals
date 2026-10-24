@@ -43,6 +43,19 @@ describe('Módulos', () => {
     expect(screen.getByText(/de 38/)).toBeInTheDocument()
   })
 
+  it('filtra los módulos en alerta temprana desde la URL y con el chip', async () => {
+    view('/modulos?alerta=1')
+    expect(screen.getByText(/de 8/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /en alerta \(8\)/i })).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(screen.getByRole('button', { name: /todos \(38\)/i }))
+    expect(screen.getByText(/de 38/)).toBeInTheDocument()
+  })
+
+  it('abre ordenada por alerta temprana y marca los módulos en alerta', () => {
+    view()
+    expect(within(bodyRows()[0]).getByText('Alerta')).toBeInTheDocument()
+  })
+
   it('abre el detalle con foco en Cerrar y lo cierra con Escape', async () => {
     view()
     await userEvent.click(screen.getAllByRole('button', { name: /billing_engine/ })[0])
